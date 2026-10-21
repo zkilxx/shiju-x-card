@@ -1,0 +1,24 @@
+article[data-testid="tweet"] {position:relative;}
+article[data-testid="tweet"] > .shiju-tweet-export {
+  position:absolute;right:16px;bottom:42px;z-index:5;
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:32px;padding:6px 12px;border:1px solid #ffffff35;border-radius:9px;
+  background:#173e34;color:#fff;font:500 12px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;
+  box-shadow:0 3px 14px #0002;cursor:pointer;opacity:0;visibility:hidden;
+  transition:opacity .15s ease;white-space:nowrap;
+}
+article[data-testid="tweet"]:hover > .shiju-tweet-export,
+article[data-testid="tweet"]:focus-within > .shiju-tweet-export,
+article[data-testid="tweet"] > .shiju-tweet-export:disabled {opacity:1;visibility:visible;}
+article[data-testid="tweet"] > .shiju-tweet-export:hover {background:#285d4c;}
+article[data-testid="tweet"] > .shiju-tweet-export:focus-visible {outline:2px solid #6abd9d;outline-offset:3px;}
+article[data-testid="tweet"] > .shiju-tweet-export:disabled {cursor:wait;}
+.shiju-page-toast {
+  position:fixed;right:24px;bottom:28px;z-index:2147483647;
+  max-width:320px;padding:12px 16px;border:1px solid #ffffff30;border-radius:10px;
+  background:#173e34;color:#fff;font:13px/1.7 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;
+  box-shadow:0 6px 24px #0003;pointer-events:none;
+}
+.shiju-page-toast[hidden] {display:none;}
+@media (hover:none) {article[data-testid="tweet"] > .shiju-tweet-export {opacity:1;visibility:visible;}}
+@media (prefers-reduced-motion:reduce) {article[data-testid="tweet"] > .shiju-tweet-export {transition:none;}}

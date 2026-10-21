@@ -1,0 +1,12 @@
+.DS_Store
+node_modules/
+.env
+.env.*
+!.env.example
+*.log
+output/
+test-results/
+playwright-report/
+# Keep personal exports and historical local packages off GitHub.
+exports/
+release/
