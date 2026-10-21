@@ -64,8 +64,8 @@ function drawBrandmark(ctx, right, y, color) {
 export function formatTimestamp(value) {
   if(typeof value!=='string' || !value)return '';
   const date=new Date(value);if(!Number.isFinite(date.getTime()))return '';
-  const pad=value=>String(value).padStart(2,'0'),offset=-date.getTimezoneOffset(),absolute=Math.abs(offset);
-  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())} UTC${offset>=0?'+':'-'}${pad(Math.floor(absolute/60))}:${pad(absolute%60)}`;
+  const pad=value=>String(value).padStart(2,'0');
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 function drawXBadge(ctx,x,y) {
   ctx.save();ctx.fillStyle='#111111';ctx.beginPath();ctx.roundRect(x,y,30,30,8);ctx.fill();

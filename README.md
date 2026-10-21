@@ -5,7 +5,7 @@
   <h1>拾句 · X 文字卡片</h1>
   <p>在 Chrome 侧边栏，把想法和喜欢的推文做成一张好看的卡片。</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.5.2-173e34" alt="Version 1.5.2">
+    <img src="https://img.shields.io/badge/version-1.5.3-173e34" alt="Version 1.5.3">
     <img src="https://img.shields.io/badge/Chrome-116%2B-4285F4?logo=googlechrome&logoColor=white" alt="Chrome 116+">
     <img src="https://img.shields.io/badge/Manifest-V3-6d7772" alt="Manifest V3">
     <img src="https://img.shields.io/badge/PNG-3240px-173e34" alt="PNG export up to 3240px">
@@ -24,7 +24,7 @@
 | 功能 | 说明 |
 | --- | --- |
 | 中英双语 | 顶部可切换简体中文 / English，语言偏好单独保存，原文和账号资料保持不变，品牌名始终显示「拾句」 |
-| 卡片时间 | 链接前有圆角方形 𝕏 标记，下方显示时间戳；自己的文字使用本次导出时间，推文使用原文发布时间，并标注本地时区 |
+| 卡片时间 | 链接前有圆角方形 𝕏 标记，下方显示时间戳；自己的文字使用本次导出时间，推文使用原文发布时间，按本地时间显示，不附带时区文字 |
 | GitHub 入口 | 左上角展示插件 Logo，右上角 GitHub 按钮直达仓库；卡片右下角 Logo 下附 GitHub 图标与仓库地址 |
 | 六套模板 | 素白、墨夜、松绿、赤陶、手札、雾蓝；手札横线跟随正文，不穿过标题 |
 | 演示资料 | 未关联账号时使用拾句 Logo 占位；同步或上传头像后显示真实头像 |
@@ -50,7 +50,7 @@
 
 目前通过 Chrome 的「加载已解压的扩展程序」安装，尚未上架 Chrome 应用商店。
 
-1. 前往 [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest)，下载 `shiju-x-card-1.5.2.zip` 并解压。
+1. 前往 [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest)，下载 `shiju-x-card-1.5.3.zip` 并解压。
 2. 在 Chrome 地址栏输入 `chrome://extensions`，打开右上角的「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择解压后的 **extension** 文件夹，里面应有 `manifest.json`。
 4. 在 Chrome 工具栏的扩展菜单中固定「拾句」，点击图标打开侧边栏。
@@ -88,9 +88,9 @@ cd shiju-x-card
 
 ![双列排版面板：独立字号与间距、细轨滑杆和清晰数值](docs/images/typography-dark.png)
 
-时间按浏览器所在时区显示，包含年月日、时分和 UTC 偏移。自己的卡片每次点击导出都会更新时间，预览随之同步；读取不到推文的实际发布时间时会提示重试。旧版保存的推文草稿若缺少时间信息，需要回到 X 重新生成。
+时间按浏览器所在时区显示，包含年月日和时分，隐藏秒钟与时区后缀。自己的卡片每次点击导出都会更新时间，预览随之同步；读取不到推文的实际发布时间时会提示重试。旧版保存的推文草稿若缺少时间信息，需要回到 X 重新生成。
 
-![卡片页脚：圆角 𝕏 标记、链接与带时区的时间戳](docs/images/card-footer.png)
+![卡片页脚：圆角 𝕏 标记、链接与简洁时间戳](docs/images/card-footer.png)
 
 ### 收藏一条推文
 
@@ -118,7 +118,7 @@ cd shiju-x-card
 
 未打开 X、尚未登录或页面资料未就绪时，会提示同步失败，并明确标记缓存账号「未确认当前账号」。请确认身份后再导出，也可以手动编辑资料。
 
-仓库入口为 [github.com/zkilxx/shiju-x-card](https://github.com/zkilxx/shiju-x-card)。卡片底部的仓库地址是图片文字；侧边栏右上角的 GitHub 按钮可点击跳转。切换语言仅改变操作界面与提示，不翻译你的标题、正文或账号资料。
+仓库入口为 [github.com/zkilxx/shiju-x-card](https://github.com/zkilxx/shiju-x-card)。卡片底部以 GitHub 图标加 `zkilxx/shiju-x-card` 简写显示仓库路径，是图片文字；侧边栏右上角的 GitHub 按钮可点击跳转。切换语言仅改变操作界面与提示，不翻译你的标题、正文或账号资料。
 
 ## 使用限制
 
@@ -138,7 +138,7 @@ npx playwright install chromium
 npm test
 ```
 
-测试使用独立临时 Chrome 配置加载真实扩展，X 页面通过本地模拟响应验证。当前 **37 项回归测试通过**，覆盖账号同步与切换、推文按钮与下载、草稿恢复、六套模板、独立字号、单次回车段间距、手札横线、时间来源与时区、界面主题、PNG 预览/导出一致性和超长内容处理。另包含真实扩展停用/启用后的旧页面重连、重复注入不重复下载、失效连接提示测试；推文导出测试模拟了原生侧边栏打开调用。模拟测试不代表每次 X 网页更新后的线上行为均已实测。
+测试使用独立临时 Chrome 配置加载真实扩展，X 页面通过本地模拟响应验证。当前 **37 项回归测试通过**，覆盖账号同步与切换、推文按钮与下载、草稿恢复、六套模板、独立字号、单次回车段间距、手札横线、时间来源与本地时间显示、界面主题、PNG 预览/导出一致性和超长内容处理。另包含真实扩展停用/启用后的旧页面重连、重复注入不重复下载、失效连接提示测试；推文导出测试模拟了原生侧边栏打开调用。模拟测试不代表每次 X 网页更新后的线上行为均已实测。
 
 生成 README 截图：
 

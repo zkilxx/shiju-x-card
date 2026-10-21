@@ -102,7 +102,7 @@ async function main(){
     const pending=panel.waitForEvent('download');await panel.locator('#export').click();const download=await pending;await download.saveAs(path.join(output,'english-export.png'));await sameCard(panel,before.image,'data:image/png;base64,'+(await fs.readFile(path.join(output,'english-export.png'))).toString('base64'));
     await panel.locator('#languageMode').selectOption('zh-CN');await eventually(async()=>await panel.locator('#export span').innerText()==='导出卡片');
   });
-  await check('Every card includes the complete repository address and GitHub icon below the brand',async()=>{
+  await check('Every card includes the compact repository label and GitHub icon below the brand',async()=>{
     const cases=await panel.evaluate(async()=>{
       const {templates,renderCard}=await import('./render.js');
       return templates.map(template=>{
@@ -110,7 +110,7 @@ async function main(){
         ctx.fillText=function(text,x,y,...rest){calls.push({text,x,y,width:this.measureText(text).width});return original.call(this,text,x,y,...rest);};
         const url='https://x.com/the_author/status/1234567890123456789';
         renderCard(c,{title:'标题',body:'正文',fontSize:38,titleSize:80,template:template.id,ratio:'auto',tweetSource:{url,publishedAt:'2026-10-21T03:04:05.000Z',account:{name:'原作者',handle:'the_author'}}});
-        const repo=calls.find(call=>call.text==='github.com/zkilxx/shiju-x-card'),brand=calls.find(call=>call.text==='拾句'),link=calls.find(call=>call.text===url.replace('https://',''));
+        const repo=calls.find(call=>call.text==='zkilxx/shiju-x-card'),brand=calls.find(call=>call.text==='拾句'),link=calls.find(call=>call.text===url.replace('https://',''));
         const icon=ctx.getImageData(Math.floor(repo.x-25),Math.floor(repo.y+2),18,18).data,bg=ctx.getImageData(0,0,1,1).data;let ink=0;
         for(let i=0;i<icon.length;i+=4)if(Math.abs(icon[i]-bg[0])+Math.abs(icon[i+1]-bg[1])+Math.abs(icon[i+2]-bg[2])>12)ink++;
         return {repo,brand,link,height:c.height,ink};
@@ -150,7 +150,7 @@ async function main(){
       const draft=await panel.evaluate(async()=>((await chrome.storage.local.get('shijuDraft')).shijuDraft));
       assert.equal(draft.exportedAt,undefined);
       const {renderCard,formatTimestamp}=await panel.evaluate(async()=>({renderCard:typeof (await import('./render.js')).renderCard,formatTimestamp:(await import('./render.js')).formatTimestamp(new Date().toISOString())}));
-      assert.equal(renderCard,'function');assert.match(formatTimestamp,/UTC\+08:00$/);
+      assert.equal(renderCard,'function');assert.match(formatTimestamp,/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
       downloads.push(await panel.locator('#preview').evaluate(c=>c.toDataURL()));
       await download.saveAs(path.join(output,`timestamp-${offset}.jpg`));
     }
@@ -177,13 +177,13 @@ async function main(){
         const c=document.createElement('canvas'),ctx=c.getContext('2d'),calls=[],original=ctx.fillText;
         ctx.fillText=function(text,x,y,maxWidth){calls.push({text,x,y,width:this.measureText(text).width,maxWidth});return original.call(this,text,x,y,...(maxWidth===undefined?[]:[maxWidth]));};
         renderCard(c,{title:'Title',body:'Body',titleSize:80,fontSize:38,template:template.id,ratio:'auto',exportedAt:'2026-10-21T20:04:05.000Z'});
-        const stamp=calls.find(call=>call.text===formatted),link=calls.find(call=>call.text==='x.com/yourname'),repo=calls.find(call=>call.text==='github.com/zkilxx/shiju-x-card');
+        const stamp=calls.find(call=>call.text===formatted),link=calls.find(call=>call.text==='x.com/yourname'),repo=calls.find(call=>call.text==='zkilxx/shiju-x-card');
         const data=ctx.getImageData(88,c.height-139+34,30,30).data;let black=0,white=0;
         for(let i=0;i<data.length;i+=4){if(data[i]===17&&data[i+1]===17&&data[i+2]===17)black++;if(data[i]>245&&data[i+1]>245&&data[i+2]>245)white++;}
         return {stamp,link,repo,black,white};
       })};
     });
-    assert.equal(cases.formatted,'2026-10-22 04:04 UTC+08:00');
+    assert.equal(cases.formatted,'2026-10-22 04:04');
     for(const c of cases.cards){assert.ok(c.stamp&&c.link&&c.repo);assert.equal(c.stamp.x,88);assert.equal(c.link.x,130);assert.ok(c.stamp.y>c.link.y+30);assert.ok(c.stamp.width<=c.stamp.maxWidth);assert.ok(c.stamp.x+c.stamp.width<c.repo.x-25);assert.ok(c.black>300);assert.ok(c.white>20);}
   });
   await check('Title and body font sizes adjust independently and persist',async()=>{

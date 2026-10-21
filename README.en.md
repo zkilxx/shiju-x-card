@@ -5,7 +5,7 @@
   <h1>Shiju · X Text Cards</h1>
   <p>Turn your thoughts and favorite X posts into beautiful cards, right in Chrome's side panel.</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.5.2-173e34" alt="Version 1.5.2">
+    <img src="https://img.shields.io/badge/version-1.5.3-173e34" alt="Version 1.5.3">
     <img src="https://img.shields.io/badge/Chrome-116%2B-4285F4?logo=googlechrome&logoColor=white" alt="Chrome 116+">
     <img src="https://img.shields.io/badge/Manifest-V3-6d7772" alt="Manifest V3">
     <img src="https://img.shields.io/badge/PNG-3240px-173e34" alt="PNG exports up to 3240px">
@@ -33,7 +33,7 @@ No API key and no build step. Sync the X account signed in to your browser, writ
 | Light and dark UI | Follow the system or choose manually; UI appearance does not change card colors |
 | Local drafts | Save text, styling and profile details on this device; restore your own draft after exporting someone else's post |
 | Card timestamps | A rounded-square X badge precedes the link; the timestamp below uses the current export time for your writing or the original publication time for imported posts |
-| GitHub links | Open the repository from the header button; every card includes a GitHub icon and repository address below the Shiju brandmark |
+| GitHub links | Open the repository from the header button; every card includes a GitHub icon and the compact `zkilxx/shiju-x-card` repository label below the Shiju brandmark |
 
 ## Interface
 
@@ -45,7 +45,7 @@ Select **English** in the language menu at the top. Language changes affect cont
 
 Requires desktop Chrome 116 or later. The extension is currently installed as an unpacked extension; it is not listed in the Chrome Web Store.
 
-1. Download `shiju-x-card-1.5.2.zip` from [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest) and extract it.
+1. Download `shiju-x-card-1.5.3.zip` from [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest) and extract it.
 2. Open `chrome://extensions` and enable **Developer mode** in the top-right corner.
 3. Click **Load unpacked** and select the extracted **extension** folder, which contains `manifest.json`.
 4. Pin Shiju from Chrome's extensions menu, then click its icon to open the side panel.
@@ -84,9 +84,9 @@ Use the default **2160px PNG** for a sharp, lossless image, or choose 3240px for
 
 ![Typography controls with a two-column layout and custom range sliders](docs/images/typography-en.png)
 
-Times are displayed to the minute with the browser’s local UTC offset. Each export of your own writing refreshes the timestamp and preview. Imported posts preserve the actual publication time. Missing publication metadata produces a retry message; older saved post drafts must be generated again from X.
+Times use the browser’s local time and are displayed to the minute, without seconds or a time-zone suffix. Each export of your own writing refreshes the timestamp and preview. Imported posts preserve the actual publication time. Missing publication metadata produces a retry message; older saved post drafts must be generated again from X.
 
-![Card footer with the rounded X badge, link and timestamp with UTC offset](docs/images/card-footer.png)
+![Card footer with the rounded X badge, link and compact timestamp](docs/images/card-footer.png)
 
 ### Save a post
 
@@ -132,7 +132,7 @@ npx playwright install chromium
 npm test
 ```
 
-The regression suite loads the real extension in an isolated temporary Chrome profile. X pages use mocked responses. All **37 regression checks pass**. Coverage includes profile synchronization, post buttons and downloads, draft restoration, templates, typography, paragraph spacing, notebook rules, export/publication timestamps, UTC offsets, languages, appearance and identical PNG preview/export pixels. Additional checks cover a real disable/enable cycle with the X document preserved, reconnects without duplicate downloads, and localized invalid-context guidance. Post-export tests stub the native side-panel opening call. Mocked tests do not guarantee live compatibility after every X page update.
+The regression suite loads the real extension in an isolated temporary Chrome profile. X pages use mocked responses. All **37 regression checks pass**. Coverage includes profile synchronization, post buttons and downloads, draft restoration, templates, typography, paragraph spacing, notebook rules, export/publication timestamps, local time formatting, languages, appearance and identical PNG preview/export pixels. Additional checks cover a real disable/enable cycle with the X document preserved, reconnects without duplicate downloads, and localized invalid-context guidance. Post-export tests stub the native side-panel opening call. Mocked tests do not guarantee live compatibility after every X page update.
 
 Regenerate documentation screenshots with demo profiles:
 
