@@ -507,12 +507,12 @@ dialog .notice {
   .export-options {
     gap:12px
   }
-  
+
 }
 @media(prefers-reduced-motion:reduce) {
   * {
     transition:none!important;
     scroll-behavior:auto!important
   }
-  
+
 }
