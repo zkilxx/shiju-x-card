@@ -5,7 +5,7 @@
   <h1>拾句 · X 文字卡片</h1>
   <p>在 Chrome 侧边栏，把想法和喜欢的推文做成一张好看的卡片。</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.5.0-173e34" alt="Version 1.5.0">
+    <img src="https://img.shields.io/badge/version-1.5.1-173e34" alt="Version 1.5.1">
     <img src="https://img.shields.io/badge/Chrome-116%2B-4285F4?logo=googlechrome&logoColor=white" alt="Chrome 116+">
     <img src="https://img.shields.io/badge/Manifest-V3-6d7772" alt="Manifest V3">
     <img src="https://img.shields.io/badge/PNG-3240px-173e34" alt="PNG export up to 3240px">
@@ -50,7 +50,7 @@
 
 目前通过 Chrome 的「加载已解压的扩展程序」安装，尚未上架 Chrome 应用商店。
 
-1. 前往 [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest)，下载 `shiju-x-card-1.5.0.zip` 并解压。
+1. 前往 [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest)，下载 `shiju-x-card-1.5.1.zip` 并解压。
 2. 在 Chrome 地址栏输入 `chrome://extensions`，打开右上角的「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择解压后的 **extension** 文件夹，里面应有 `manifest.json`。
 4. 在 Chrome 工具栏的扩展菜单中固定「拾句」，点击图标打开侧边栏。
@@ -88,7 +88,7 @@ cd shiju-x-card
 
 ![双列排版面板：独立字号与间距、细轨滑杆和清晰数值](docs/images/typography-dark.png)
 
-时间按浏览器所在时区显示，包含年月日、时分秒和 UTC 偏移。自己的卡片每次点击导出都会更新时间，预览随之同步；读取不到推文的实际发布时间时会提示重试。旧版保存的推文草稿若缺少时间信息，需要回到 X 重新生成。
+时间按浏览器所在时区显示，包含年月日、时分和 UTC 偏移。自己的卡片每次点击导出都会更新时间，预览随之同步；读取不到推文的实际发布时间时会提示重试。旧版保存的推文草稿若缺少时间信息，需要回到 X 重新生成。
 
 ![卡片页脚：圆角 𝕏 标记、链接与带时区的时间戳](docs/images/card-footer.png)
 

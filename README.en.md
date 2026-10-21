@@ -5,7 +5,7 @@
   <h1>Shiju · X Text Cards</h1>
   <p>Turn your thoughts and favorite X posts into beautiful cards, right in Chrome's side panel.</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.5.0-173e34" alt="Version 1.5.0">
+    <img src="https://img.shields.io/badge/version-1.5.1-173e34" alt="Version 1.5.1">
     <img src="https://img.shields.io/badge/Chrome-116%2B-4285F4?logo=googlechrome&logoColor=white" alt="Chrome 116+">
     <img src="https://img.shields.io/badge/Manifest-V3-6d7772" alt="Manifest V3">
     <img src="https://img.shields.io/badge/PNG-3240px-173e34" alt="PNG exports up to 3240px">
@@ -45,7 +45,7 @@ Select **English** in the language menu at the top. Language changes affect cont
 
 Requires desktop Chrome 116 or later. The extension is currently installed as an unpacked extension; it is not listed in the Chrome Web Store.
 
-1. Download `shiju-x-card-1.5.0.zip` from [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest) and extract it.
+1. Download `shiju-x-card-1.5.1.zip` from [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest) and extract it.
 2. Open `chrome://extensions` and enable **Developer mode** in the top-right corner.
 3. Click **Load unpacked** and select the extracted **extension** folder, which contains `manifest.json`.
 4. Pin Shiju from Chrome's extensions menu, then click its icon to open the side panel.
@@ -84,7 +84,7 @@ Use the default **2160px PNG** for a sharp, lossless image, or choose 3240px for
 
 ![Typography controls with a two-column layout and custom range sliders](docs/images/typography-en.png)
 
-Times include seconds and the browser’s local UTC offset. Each export of your own writing refreshes the timestamp and preview. Imported posts preserve the actual publication time. Missing publication metadata produces a retry message; older saved post drafts must be generated again from X.
+Times are displayed to the minute with the browser’s local UTC offset. Each export of your own writing refreshes the timestamp and preview. Imported posts preserve the actual publication time. Missing publication metadata produces a retry message; older saved post drafts must be generated again from X.
 
 ![Card footer with the rounded X badge, link and timestamp with UTC offset](docs/images/card-footer.png)
 

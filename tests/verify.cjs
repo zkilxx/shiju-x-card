@@ -34,7 +34,7 @@ async function main(){
   await panel.locator('#templates button').first().waitFor();
   await check('MV3 service worker and real extension UI load',async()=>{
     assert.equal(await panel.locator('#templates button').count(),6);
-    assert.match(await panel.locator('#accountStatus').innerText(),/未关联/);
+    await eventually(async()=>/未关联/.test(await panel.locator('#accountStatus').innerText()));
     assert.equal(await panel.locator('#avatar img[src="icons/icon128.png"]').count(),1);
     const behavior=await worker.evaluate(()=>chrome.sidePanel.getPanelBehavior());assert.equal(behavior.openPanelOnActionClick,true);
   });
@@ -183,8 +183,8 @@ async function main(){
         return {stamp,link,repo,black,white};
       })};
     });
-    assert.equal(cases.formatted,'2026-10-22 04:04:05 UTC+08:00');
-    for(const c of cases.cards){assert.ok(c.stamp&&c.link&&c.repo);assert.equal(c.stamp.x,c.link.x);assert.ok(c.stamp.y>c.link.y+30);assert.ok(c.stamp.width<=c.stamp.maxWidth);assert.ok(c.stamp.x+c.stamp.width<c.repo.x-25);assert.ok(c.black>300);assert.ok(c.white>20);}
+    assert.equal(cases.formatted,'2026-10-22 04:04 UTC+08:00');
+    for(const c of cases.cards){assert.ok(c.stamp&&c.link&&c.repo);assert.equal(c.stamp.x,88);assert.equal(c.link.x,130);assert.ok(c.stamp.y>c.link.y+30);assert.ok(c.stamp.width<=c.stamp.maxWidth);assert.ok(c.stamp.x+c.stamp.width<c.repo.x-25);assert.ok(c.black>300);assert.ok(c.white>20);}
   });
   await check('Title and body font sizes adjust independently and persist',async()=>{
     await panel.locator('#titleSize').fill('80');

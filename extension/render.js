@@ -65,7 +65,7 @@ export function formatTimestamp(value) {
   if(typeof value!=='string' || !value)return '';
   const date=new Date(value);if(!Number.isFinite(date.getTime()))return '';
   const pad=value=>String(value).padStart(2,'0'),offset=-date.getTimezoneOffset(),absolute=Math.abs(offset);
-  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())} UTC${offset>=0?'+':'-'}${pad(Math.floor(absolute/60))}:${pad(absolute%60)}`;
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())} UTC${offset>=0?'+':'-'}${pad(Math.floor(absolute/60))}:${pad(absolute%60)}`;
 }
 function drawXBadge(ctx,x,y) {
   ctx.save();ctx.fillStyle='#111111';ctx.beginPath();ctx.roundRect(x,y,30,30,8);ctx.fill();
@@ -178,6 +178,6 @@ export function renderCard(canvas, state, avatar = null, outputWidth = 1080) {
   // Keep the complete original URL while reserving clear space for the brandmark.
   ctx.fillText(footerURL,linkX,footerY+38,linkWidth);
   const repositoryWidth=drawRepository(ctx,1080-padding,footerY+82,template.muted);
-  if(stamp){ctx.font=`400 18px ${sans}`;ctx.fillStyle=template.muted;ctx.fillText(stamp,linkX,footerY+82,1080-padding-repositoryWidth-28-linkX);}
+  if(stamp){ctx.font=`400 18px ${sans}`;ctx.fillStyle=template.muted;ctx.fillText(stamp,padding,footerY+82,inner-repositoryWidth-28);}
   return {width:canvas.width,height:canvas.height,fontSize,titleSize,template:template.name};
 }
