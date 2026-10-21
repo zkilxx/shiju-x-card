@@ -5,7 +5,7 @@
   <h1>Shiju · X Text Cards</h1>
   <p>Turn your thoughts and favorite X posts into beautiful cards, right in Chrome's side panel.</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.5.3-173e34" alt="Version 1.5.3">
+    <img src="https://img.shields.io/badge/version-1.5.4-173e34" alt="Version 1.5.4">
     <img src="https://img.shields.io/badge/Chrome-116%2B-4285F4?logo=googlechrome&logoColor=white" alt="Chrome 116+">
     <img src="https://img.shields.io/badge/Manifest-V3-6d7772" alt="Manifest V3">
     <img src="https://img.shields.io/badge/PNG-3240px-173e34" alt="PNG exports up to 3240px">
@@ -32,8 +32,8 @@ No API key and no build step. Sync the X account signed in to your browser, writ
 | Flexible sizes | Auto height, square 1:1 or portrait 4:5 |
 | Light and dark UI | Follow the system or choose manually; UI appearance does not change card colors |
 | Local drafts | Save text, styling and profile details on this device; restore your own draft after exporting someone else's post |
-| Card timestamps | A rounded-square X badge precedes the link; the timestamp below uses the current export time for your writing or the original publication time for imported posts |
-| GitHub links | Open the repository from the header button; every card includes a GitHub icon and the compact `zkilxx/shiju-x-card` repository label below the Shiju brandmark |
+| Card timestamps | A rounded-square X badge precedes the full original link in smaller type; the timestamp below uses the current export time for your writing or the original publication time for imported posts |
+| GitHub links | Open the repository from the header button; every card includes a GitHub icon and the full `github.com/zkilxx/shiju-x-card` repository address in smaller type below the Shiju brandmark |
 
 ## Interface
 
@@ -45,7 +45,7 @@ Select **English** in the language menu at the top. Language changes affect cont
 
 Requires desktop Chrome 116 or later. The extension is currently installed as an unpacked extension; it is not listed in the Chrome Web Store.
 
-1. Download `shiju-x-card-1.5.3.zip` from [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest) and extract it.
+1. Download `shiju-x-card-1.5.4.zip` from [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest) and extract it.
 2. Open `chrome://extensions` and enable **Developer mode** in the top-right corner.
 3. Click **Load unpacked** and select the extracted **extension** folder, which contains `manifest.json`.
 4. Pin Shiju from Chrome's extensions menu, then click its icon to open the side panel.

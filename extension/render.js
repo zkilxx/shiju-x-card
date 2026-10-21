@@ -73,8 +73,8 @@ function drawXBadge(ctx,x,y) {
 }
 function drawRepository(ctx,right,y,color) {
   ctx.save();
-  ctx.font=`400 18px ${sans}`;ctx.fillStyle=color;
-  const iconSize=18,gap=7,textWidth=ctx.measureText(repositoryLabel).width;
+  ctx.font=`400 14px ${sans}`;ctx.fillStyle=color;
+  const iconSize=14,gap=6,textWidth=ctx.measureText(repositoryLabel).width;
   const left=right-textWidth-gap-iconSize;
   ctx.fillText(repositoryLabel,left+iconSize+gap,y);
   ctx.translate(left,y+2);ctx.scale(iconSize/16,iconSize/16);
@@ -148,7 +148,7 @@ export function renderCard(canvas, state, avatar = null, outputWidth = 1080) {
   }
   ctx.restore();
   ctx.font=`600 30px ${sans}`;ctx.fillStyle=template.fg;ctx.fillText(ellipsis(ctx,account.name,inner-116),padding+112,100);
-  ctx.font=`400 25px ${sans}`;ctx.fillStyle=template.muted;ctx.fillText(`@${account.handle}`,padding+112,145);
+  ctx.font=`400 18px ${sans}`;ctx.fillStyle=template.muted;ctx.fillText(`@${account.handle}`,padding+112,145);
   let cursor=contentTop;
   if(title) {ctx.font=`600 ${titleSize}px ${titleFamily}`;textLines(ctx,titleLines,padding,cursor,titleLeading,template.fg);cursor+=titleLines.length*titleLeading+(body?titleGap:0);}
   if(body) {
@@ -168,15 +168,15 @@ export function renderCard(canvas, state, avatar = null, outputWidth = 1080) {
   }
   const footerY=height-139;
   line(ctx,padding,footerY,inner,template.line);
-  ctx.font=`400 25px ${sans}`;ctx.fillStyle=template.muted;
+  ctx.font=`400 18px ${sans}`;ctx.fillStyle=template.muted;
   const footerURL=state.tweetSource?.url?.replace(/^https:\/\//,'') || `x.com/${account.handle}`;
   const brandWidth=drawBrandmark(ctx,1080-padding,footerY+35,template.muted);
   const linkX=padding+42,linkWidth=inner-brandWidth-36-42;
   drawXBadge(ctx,padding,footerY+34);
-  let linkSize=25;
-  while(ctx.measureText(footerURL).width>linkWidth && linkSize>19){linkSize--;ctx.font=`400 ${linkSize}px ${sans}`;}
+  let linkSize=18;
+  while(ctx.measureText(footerURL).width>linkWidth && linkSize>14){linkSize--;ctx.font=`400 ${linkSize}px ${sans}`;}
   // Keep the complete original URL while reserving clear space for the brandmark.
-  ctx.fillText(footerURL,linkX,footerY+38,linkWidth);
+  ctx.fillText(footerURL,linkX,footerY+41,linkWidth);
   const repositoryWidth=drawRepository(ctx,1080-padding,footerY+82,template.muted);
   if(stamp){ctx.font=`400 18px ${sans}`;ctx.fillStyle=template.muted;ctx.fillText(stamp,padding,footerY+82,inner-repositoryWidth-28);}
   return {width:canvas.width,height:canvas.height,fontSize,titleSize,template:template.name};
