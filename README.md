@@ -5,7 +5,7 @@
   <h1>拾句 · X 文字卡片</h1>
   <p>在 Chrome 侧边栏，把想法和喜欢的推文做成一张好看的卡片。</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.4.1-173e34" alt="Version 1.4.1">
+    <img src="https://img.shields.io/badge/version-1.4.2-173e34" alt="Version 1.4.2">
     <img src="https://img.shields.io/badge/Chrome-116%2B-4285F4?logo=googlechrome&logoColor=white" alt="Chrome 116+">
     <img src="https://img.shields.io/badge/Manifest-V3-6d7772" alt="Manifest V3">
     <img src="https://img.shields.io/badge/PNG-3240px-173e34" alt="PNG export up to 3240px">
@@ -49,7 +49,7 @@
 
 目前通过 Chrome 的「加载已解压的扩展程序」安装，尚未上架 Chrome 应用商店。
 
-1. 前往 [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest)，下载 `shiju-x-card-1.4.1.zip` 并解压。
+1. 前往 [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest)，下载 `shiju-x-card-1.4.2.zip` 并解压。
 2. 在 Chrome 地址栏输入 `chrome://extensions`，打开右上角的「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择解压后的 **extension** 文件夹，里面应有 `manifest.json`。
 4. 在 Chrome 工具栏的扩展菜单中固定「拾句」，点击图标打开侧边栏。
@@ -84,6 +84,8 @@ cd shiju-x-card
 **段间距**是段落之间的额外留白：单次回车就分段，自动折行的行距保持不变；手动多留的空行仍保留一行高度。段间距和标题到正文间距均可设为 0–160px，按 1080px 卡片宽度计算。导出更大图片时会同比放大；固定比例需要缩小字号时，间距也同步缩放。
 
 推荐使用默认的 **2160px PNG**。需要更大尺寸可选 3240px；JPG 使用最高质量编码。图片中的主页或推文地址是可读文字，不是可点击链接。
+
+![双列排版面板：独立字号与间距、细轨滑杆和清晰数值](docs/images/typography-dark.png)
 
 ### 收藏一条推文
 

@@ -55,6 +55,11 @@ function queueSave() {
   status('saveStatus','正在保存…');clearTimeout(saveTimer);
   saveTimer=setTimeout(flushSave,200);
 }
+function updateRangeFill(input) {
+  const min=Number(input.min),max=Number(input.max);
+  const progress=max>min?Math.max(0,Math.min(100,(Number(input.value)-min)/(max-min)*100)):0;
+  input.style.setProperty('--range-progress',`${progress}%`);
+}
 function redraw() {
   try {
     const dimensions=renderCard($('preview'),state,cardAvatar(),Number(state.resolution));
@@ -72,6 +77,7 @@ function redraw() {
   $('titleSizeLabel').textContent=state.titleSize;
   $('paragraphSpacingLabel').textContent=`${state.paragraphSpacing}px`;
   $('titleBodyGapLabel').textContent=`${state.titleBodyGap}px`;
+  for(const id of ['titleSize','fontSize','paragraphSpacing','titleBodyGap'])updateRangeFill($(id));
 }
 function renderTemplates() {
   for(const template of templates) {
@@ -178,6 +184,7 @@ async function init() {
   for(const id of ['title','body','ratio','titleSize','fontSize','paragraphSpacing','titleBodyGap','format','resolution']) {
     $(id).value=state[id];$(id).addEventListener(['title','body','titleSize','fontSize','paragraphSpacing','titleBodyGap'].includes(id)?'input':'change',()=>{
       state[id]=['titleSize','fontSize','paragraphSpacing','titleBodyGap','resolution'].includes(id)?Number($(id).value):$(id).value;
+      if($(id).type==='range')updateRangeFill($(id));
       clearTimeout(renderTimer);renderTimer=setTimeout(redraw,60);queueSave();
     });
   }

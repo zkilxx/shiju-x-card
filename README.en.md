@@ -5,7 +5,7 @@
   <h1>Shiju · X Text Cards</h1>
   <p>Turn your thoughts and favorite X posts into beautiful cards, right in Chrome's side panel.</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.4.1-173e34" alt="Version 1.4.1">
+    <img src="https://img.shields.io/badge/version-1.4.2-173e34" alt="Version 1.4.2">
     <img src="https://img.shields.io/badge/Chrome-116%2B-4285F4?logo=googlechrome&logoColor=white" alt="Chrome 116+">
     <img src="https://img.shields.io/badge/Manifest-V3-6d7772" alt="Manifest V3">
     <img src="https://img.shields.io/badge/PNG-3240px-173e34" alt="PNG exports up to 3240px">
@@ -44,7 +44,7 @@ Select **English** in the language menu at the top. Language changes affect cont
 
 Requires desktop Chrome 116 or later. The extension is currently installed as an unpacked extension; it is not listed in the Chrome Web Store.
 
-1. Download `shiju-x-card-1.4.1.zip` from [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest) and extract it.
+1. Download `shiju-x-card-1.4.2.zip` from [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest) and extract it.
 2. Open `chrome://extensions` and enable **Developer mode** in the top-right corner.
 3. Click **Load unpacked** and select the extracted **extension** folder, which contains `manifest.json`.
 4. Pin Shiju from Chrome's extensions menu, then click its icon to open the side panel.
@@ -80,6 +80,8 @@ To update, replace the files in the installed folder, click **Reload** for Shiju
 **Paragraph gap** adds space between paragraphs: a single Enter starts a new paragraph; automatically wrapped lines keep their existing line spacing. Extra blank lines retain one line of height. Paragraph gap and title–body gap each range from 0 to 160px at a 1080px card width. Larger exports scale them proportionally; fixed-ratio cards scale spacing along with text when fitting content.
 
 Use the default **2160px PNG** for a sharp, lossless image, or choose 3240px for a larger export. JPG uses maximum-quality encoding. Addresses printed on a card are image text and cannot be clicked. The GitHub button in the extension header opens the repository in a new tab.
+
+![Typography controls with a two-column layout and custom range sliders](docs/images/typography-en.png)
 
 ### Save a post
 
