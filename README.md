@@ -5,7 +5,7 @@
   <h1>拾句 · X 文字卡片</h1>
   <p>在 Chrome 侧边栏，把想法和喜欢的推文做成一张好看的卡片。</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.4.2-173e34" alt="Version 1.4.2">
+    <img src="https://img.shields.io/badge/version-1.4.3-173e34" alt="Version 1.4.3">
     <img src="https://img.shields.io/badge/Chrome-116%2B-4285F4?logo=googlechrome&logoColor=white" alt="Chrome 116+">
     <img src="https://img.shields.io/badge/Manifest-V3-6d7772" alt="Manifest V3">
     <img src="https://img.shields.io/badge/PNG-3240px-173e34" alt="PNG export up to 3240px">
@@ -26,7 +26,7 @@
 | 中英双语 | 顶部可切换简体中文 / English，语言偏好单独保存，原文和账号资料保持不变，品牌名始终显示「拾句」 |
 | GitHub 入口 | 左上角展示插件 Logo，右上角 GitHub 按钮直达仓库；卡片右下角 Logo 下附 GitHub 图标与仓库地址 |
 | 六套模板 | 素白、墨夜、松绿、赤陶、手札、雾蓝；手札横线跟随正文，不穿过标题 |
-| 演示资料 | 未关联账号时使用 X Logo 占位；同步或上传头像后显示真实头像 |
+| 演示资料 | 未关联账号时使用拾句 Logo 占位；同步或上传头像后显示真实头像 |
 | 账号同步 | 读取当前 X 登录账号的头像、昵称、@ID 和主页地址，支持手动编辑与头像上传 |
 | 推文转卡片 | 鼠标悬停推文后点击「导出卡片」，使用当前模板，保留原作者和原推文链接 |
 | 独立排版 | 标题字号、正文字号、段间距、标题与正文间距分别调整 |
@@ -49,7 +49,7 @@
 
 目前通过 Chrome 的「加载已解压的扩展程序」安装，尚未上架 Chrome 应用商店。
 
-1. 前往 [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest)，下载 `shiju-x-card-1.4.2.zip` 并解压。
+1. 前往 [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest)，下载 `shiju-x-card-1.4.3.zip` 并解压。
 2. 在 Chrome 地址栏输入 `chrome://extensions`，打开右上角的「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择解压后的 **extension** 文件夹，里面应有 `manifest.json`。
 4. 在 Chrome 工具栏的扩展菜单中固定「拾句」，点击图标打开侧边栏。

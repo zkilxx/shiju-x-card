@@ -5,7 +5,7 @@
   <h1>Shiju · X Text Cards</h1>
   <p>Turn your thoughts and favorite X posts into beautiful cards, right in Chrome's side panel.</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.4.2-173e34" alt="Version 1.4.2">
+    <img src="https://img.shields.io/badge/version-1.4.3-173e34" alt="Version 1.4.3">
     <img src="https://img.shields.io/badge/Chrome-116%2B-4285F4?logo=googlechrome&logoColor=white" alt="Chrome 116+">
     <img src="https://img.shields.io/badge/Manifest-V3-6d7772" alt="Manifest V3">
     <img src="https://img.shields.io/badge/PNG-3240px-173e34" alt="PNG exports up to 3240px">
@@ -38,13 +38,13 @@ No API key and no build step. Sync the X account signed in to your browser, writ
 
 <p align="center"><img src="docs/images/sidepanel-en.png" alt="English Shiju editor with logo, repository button, language and appearance selectors, templates, typography and export controls" width="440"></p>
 
-Select **English** in the language menu at the top. Language changes affect controls, dialogs, status messages and post-export buttons. The brand name remains **拾句** in both languages. Your title, body text, profile and exported card content are preserved. The unlinked demo account uses the X mark as its placeholder avatar.
+Select **English** in the language menu at the top. Language changes affect controls, dialogs, status messages and post-export buttons. The brand name remains **拾句** in both languages. Your title, body text, profile and exported card content are preserved. The unlinked demo account uses the Shiju logo as its placeholder avatar.
 
 ## Installation
 
 Requires desktop Chrome 116 or later. The extension is currently installed as an unpacked extension; it is not listed in the Chrome Web Store.
 
-1. Download `shiju-x-card-1.4.2.zip` from [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest) and extract it.
+1. Download `shiju-x-card-1.4.3.zip` from [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest) and extract it.
 2. Open `chrome://extensions` and enable **Developer mode** in the top-right corner.
 3. Click **Load unpacked** and select the extracted **extension** folder, which contains `manifest.json`.
 4. Pin Shiju from Chrome's extensions menu, then click its icon to open the side panel.

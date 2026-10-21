@@ -34,7 +34,7 @@ async function main(){
   await check('MV3 service worker and real extension UI load',async()=>{
     assert.equal(await panel.locator('#templates button').count(),6);
     assert.match(await panel.locator('#accountStatus').innerText(),/未关联/);
-    assert.equal(await panel.locator('#avatar .x-mark path').count(),1);
+    assert.equal(await panel.locator('#avatar img[src="icons/icon128.png"]').count(),1);
     const behavior=await worker.evaluate(()=>chrome.sidePanel.getPanelBehavior());assert.equal(behavior.openPanelOnActionClick,true);
   });
   await panel.screenshot({path:path.join(output,'sidepanel-440.png'),fullPage:true});

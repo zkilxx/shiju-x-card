@@ -1,6 +1,6 @@
 {
   "name": "shiju-x-card",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "private": true,
   "scripts": {
     "test": "node tests/verify.cjs"

@@ -1,5 +1,5 @@
 import {templates, renderCard, loadAvatar} from './render.js';
-import {githubPath,xPath} from './branding.js';
+import {githubPath} from './branding.js';
 const {t,text:localized}=globalThis.ShijuI18n;
 const $ = id => document.getElementById(id);
 const extension = Boolean(globalThis.chrome?.runtime?.id);
@@ -102,7 +102,7 @@ function showAccount(status) {
   localized($('accountStatus'),status || (account ? account.source==='x'?'上次同步资料 · 待确认当前账号':'手动资料 · 可同步 X 账号':'未关联 · 打开 X 后同步'));
   $('avatar').replaceChildren();
   if(account?.avatarData) {const img=document.createElement('img');img.src=account.avatarData;img.alt='';$('avatar').append(img);} else if(account)$('avatar').textContent=account.name.slice(0,1);
-  else {const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'),path=document.createElementNS(svg.namespaceURI,'path');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('class','x-mark');svg.setAttribute('aria-hidden','true');path.setAttribute('d',xPath);svg.append(path);$('avatar').append(svg);}
+  else {const img=document.createElement('img');img.src='icons/icon128.png';img.alt='';$('avatar').append(img);}
 }
 async function syncAccount(quiet=false) {
   if(!extension) {if(!quiet)notice('网页预览无法读取 X。安装插件后可同步，或点击右上角填写账号资料。');return;}

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "拾句 · X 文字卡片",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "在侧边栏把文字变成精美卡片，关联当前 X 账号，离线导出高清图片。",
   "minimum_chrome_version": "116",
   "permissions": [

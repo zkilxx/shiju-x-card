@@ -1,4 +1,4 @@
-import {githubPath,repositoryLabel,xPath} from './branding.js';
+import {githubPath,repositoryLabel} from './branding.js';
 export const templates = [
   {id:'white', name:'素白', bg:'#ffffff', fg:'#242c27', muted:'#85918a', line:'#dce2dd', accent:'#173e34', serif:true},
   {id:'ink', name:'墨夜', bg:'#262827', fg:'#f5f4ef', muted:'#abb0aa', line:'#4b514c', accent:'#d6dacb', serif:true},
@@ -41,6 +41,13 @@ function textLines(ctx, lines, x, y, leading, color) {
   ctx.fillStyle=color;
   lines.forEach((value, i) => ctx.fillText(value,x,y+i*leading));
 }
+function drawQuotation(ctx,x,y,size,color) {
+  ctx.save();ctx.translate(x,y);ctx.scale(size/72,size/72);ctx.translate(-29,-30);
+  ctx.fillStyle=color;ctx.strokeStyle=color;ctx.lineWidth=9;ctx.lineCap='round';
+  ctx.stroke(new Path2D('M34 76V58c0-13 6-21 18-26M76 76V58c0-13 6-21 18-26'));
+  ctx.beginPath();ctx.roundRect(30,62,27,31,5);ctx.roundRect(72,62,27,31,5);ctx.fill();
+  ctx.restore();
+}
 function drawBrandmark(ctx, right, y, color) {
   ctx.save();
   ctx.font=`500 28px ${serif}`;
@@ -50,10 +57,7 @@ function drawBrandmark(ctx, right, y, color) {
   ctx.globalAlpha=.8;ctx.fillStyle=color;ctx.strokeStyle=color;
   ctx.fillText('拾句',left+markSize+gap,y);
   // Reuse the extension icon's quotation-mark geometry as a crisp monochrome logo.
-  ctx.translate(left,y+4);ctx.scale(markSize/72,markSize/72);ctx.translate(-29,-30);
-  ctx.lineWidth=9;ctx.lineCap='round';
-  ctx.stroke(new Path2D('M34 76V58c0-13 6-21 18-26M76 76V58c0-13 6-21 18-26'));
-  ctx.beginPath();ctx.roundRect(30,62,27,31,5);ctx.roundRect(72,62,27,31,5);ctx.fill();
+  drawQuotation(ctx,left,y+4,markSize,color);
   ctx.restore();
   return width;
 }
@@ -126,7 +130,7 @@ export function renderCard(canvas, state, avatar = null, outputWidth = 1080) {
     ctx.drawImage(avatar,(avatar.naturalWidth-edge)/2,(avatar.naturalHeight-edge)/2,edge,edge,padding,93,86,86);
   } else {
     ctx.fillStyle=template.line;ctx.fillRect(padding,93,86,86);ctx.fillStyle=template.muted;
-    if(!state.account && !state.tweetSource?.account){ctx.save();ctx.translate(padding+23,116);ctx.scale(40/24,40/24);ctx.fill(new Path2D(xPath));ctx.restore();}
+    if(!state.account && !state.tweetSource?.account){ctx.fillStyle='#173e34';ctx.fillRect(padding,93,86,86);drawQuotation(ctx,padding+29*86/128,93+30*86/128,72*86/128,'#f6f4e9');}
     else {ctx.beginPath();ctx.arc(padding+43,125,16,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(padding+43,171,31,28,0,0,Math.PI*2);ctx.fill();}
   }
   ctx.restore();
