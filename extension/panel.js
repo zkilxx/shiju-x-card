@@ -1,12 +1,12 @@
 import {templates, renderCard, loadAvatar} from './render.js';
-import {githubPath} from './branding.js';
+import {githubPath,xPath} from './branding.js';
 const {t,text:localized}=globalThis.ShijuI18n;
 const $ = id => document.getElementById(id);
 const extension = Boolean(globalThis.chrome?.runtime?.id);
 const defaults = {title:$('title').value,body:$('body').value,template:'white',ratio:'auto',titleSize:106,fontSize:38,paragraphSpacing:70,titleBodyGap:38,format:'png',resolution:2160,exportQualityVersion:2,account:null,tweetSource:null,personalDraft:null};
 let state = {...defaults}, avatar = null, sourceAvatar=null, saveTimer, renderTimer, syncGeneration=0, saveRevision=0;
 let tweetQueue=Promise.resolve(),previewExportedAt=new Date().toISOString();
-let saving=Promise.resolve(), exporting=false, renderValid=false;
+let saving=Promise.resolve(), exporting=false, importing=false, renderValid=false;
 const storage = {
   async get() {return extension ? (await chrome.storage.local.get('shijuDraft')).shijuDraft : JSON.parse(localStorage.getItem('shijuDraft') || 'null');},
   async set(value) {if(extension) await chrome.storage.local.set({shijuDraft:value});else localStorage.setItem('shijuDraft',JSON.stringify(value));}
@@ -14,6 +14,10 @@ const storage = {
 const notice = (value,values={}) => localized($('notice'),value,values);
 const status = (id,value,values={}) => localized($(id),value,values);
 const exportLabel = () => localized($('export').querySelector('span'),exporting?'正在导出…':'导出卡片');
+function updateActions() {
+  exportLabel();localized($('compose').querySelector('span'),importing?'正在添加…':'放入 X 编辑栏');
+  $('export').disabled=$('compose').disabled=!renderValid || exporting || importing;
+}
 const cardAccount=()=>state.tweetSource?.account || state.account;
 const cardAvatar=()=>state.tweetSource ? sourceAvatar : avatar;
 function showTweetSource() {
@@ -66,12 +70,13 @@ function redraw() {
     $('preview').removeAttribute('data-i18n-aria');
     $('dimensions').textContent=`${dimensions.width} × ${dimensions.height}${dimensions.fontSize<state.fontSize?t(' · 字号已适配'):''}`;
     $('preview').setAttribute('aria-label',t('{name}的卡片：{title}。{body}',{name:cardAccount()?.name || t('示例账号'),title:state.title,body:state.body}));
-    renderValid=true;$('export').disabled=exporting;
+    renderValid=true;
     if($('notice').dataset.renderError) {notice('');delete $('notice').dataset.renderError;}
   } catch(error) {
-    renderValid=false;$('export').disabled=true;notice(error.message);$('notice').dataset.renderError='1';
+    renderValid=false;notice(error.message);$('notice').dataset.renderError='1';
     $('dimensions').textContent=t('文字超出尺寸 · 上次有效预览');
   }
+  updateActions();
   $('titleCount').textContent=`${[...state.title].length}/80`;$('bodyCount').textContent=`${[...state.body].length}/2400`;
   $('fontSizeLabel').textContent=state.fontSize;
   $('titleSizeLabel').textContent=state.titleSize;
@@ -138,28 +143,51 @@ async function uploadAvatar(file) {
 function openProfile() {
   $('profileName').value=state.account?.name || '';$('profileHandle').value=state.account?.handle || '';$('avatarFile').value='';status('profileError','');$('profileDialog').showModal();
 }
+function canCreateCard() {
+  if(exporting || importing)return false;
+  if(!state.title.trim() && !state.body.trim()) {notice('先写一点文字，再导出卡片。');$('body').focus();return false;}
+  if(!cardAccount()) {notice('先同步当前 X 账号，或填写账号资料后导出。');openProfile();return false;}
+  return renderValid;
+}
+async function createCardImage() {
+  previewExportedAt=new Date().toISOString();redraw();
+  const snapshot={...structuredClone(state),exportedAt:previewExportedAt},author=cardAccount();
+  const canvas=document.createElement('canvas');renderCard(canvas,snapshot,cardAvatar(),Number(state.resolution));
+  const mime=snapshot.format==='jpeg'?'image/jpeg':'image/png';
+  const blob=await new Promise(resolve=>canvas.toBlob(resolve,mime,1));if(!blob)throw new Error('图片生成失败，请重试。');
+  const filename=`${ShijuI18n.language==='en'?'Shiju':'拾句'}-${author.handle}-${snapshot.exportedAt.replace(/[:.]/g,'-')}.${snapshot.format==='jpeg'?'jpg':'png'}`;
+  return {blob,filename};
+}
 async function exportCard() {
-  if(exporting)return;
-  if(!state.title.trim() && !state.body.trim()) {notice('先写一点文字，再导出卡片。');$('body').focus();return;}
-  if(!cardAccount()) {notice('先同步当前 X 账号，或填写账号资料后导出。');openProfile();return;}
-  if(!renderValid)return;
-  exporting=true;$('export').disabled=true;exportLabel();
+  if(!canCreateCard())return;
+  exporting=true;updateActions();
   try {
-    previewExportedAt=new Date().toISOString();redraw();
-    const snapshot={...structuredClone(state),exportedAt:previewExportedAt},author=cardAccount();
-    const canvas=document.createElement('canvas');renderCard(canvas,snapshot,cardAvatar(),Number(state.resolution));
-    const mime=state.format==='jpeg'?'image/jpeg':'image/png';
-    const blob=await new Promise(resolve=>canvas.toBlob(resolve,mime,1));if(!blob)throw new Error('图片生成失败，请重试。');
+    const {blob,filename}=await createCardImage();
     const url=URL.createObjectURL(blob), link=document.createElement('a');
-    link.href=url;link.download=`${ShijuI18n.language==='en'?'Shiju':'拾句'}-${author.handle}-${snapshot.exportedAt.replace(/[:.]/g,'-')}.${snapshot.format==='jpeg'?'jpg':'png'}`;
+    link.href=url;link.download=filename;
     document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
     notice('{format} 图片已生成，正在下载。',{format:state.format==='jpeg'?'JPG':'PNG'});
   } catch(error) {notice('导出失败：{error}',{error:t(error.message)});}
-  finally {exporting=false;$('export').disabled=!renderValid;exportLabel();}
+  finally {exporting=false;updateActions();}
+}
+async function addToComposer() {
+  if(!extension){notice('安装 Chrome 插件后，即可将卡片放入 X 编辑栏。');return;}
+  if(!canCreateCard())return;
+  importing=true;updateActions();
+  try {
+    const {blob,filename}=await createCardImage();
+    if(blob.size>5*1024*1024)throw new Error('图片超过 5MB，请调低卡片宽度后重试。');
+    const dataURL=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('图片生成失败，请重试。'));reader.readAsDataURL(blob);});
+    const result=await chrome.runtime.sendMessage({type:'OPEN_CARD_COMPOSER',image:{dataURL,filename}});
+    if(!result?.ok)throw new Error(result?.error || 'X 未能添加图片，请在新标签页查看提示。');
+    notice('卡片已放入 X 编辑栏，检查后即可发布。');
+  } catch(error){notice('添加失败：{error}',{error:t(error.message)});}
+  finally {importing=false;updateActions();}
 }
 async function init() {
   await ShijuI18n.ready;
   const repoPath=document.createElementNS('http://www.w3.org/2000/svg','path');repoPath.setAttribute('d',githubPath);$('repository').querySelector('svg').append(repoPath);
+  const composePath=document.createElementNS('http://www.w3.org/2000/svg','path');composePath.setAttribute('d',xPath);$('compose').querySelector('svg').append(composePath);
   try {
     const saved=await storage.get();if(saved)state={...defaults,...saved,titleSize:saved.titleSize ?? Math.round((Number(saved.fontSize)||38)*2.8),paragraphSpacing:saved.paragraphSpacing ?? Math.round((Number(saved.fontSize)||38)*1.85)};
     state.title=String(state.title||'').slice(0,80);state.body=String(state.body||'').slice(0,2400);
@@ -181,7 +209,7 @@ async function init() {
   document.addEventListener('shiju-language-change',()=>{
     $('templates').replaceChildren();renderTemplates();selectTemplate();showTweetSource();
     if(!state.account)$('accountName').textContent=t('示例账号');
-    exportLabel();redraw();
+    updateActions();redraw();
   });
   for(const id of ['title','body','ratio','titleSize','fontSize','paragraphSpacing','titleBodyGap','format','resolution']) {
     $(id).value=state[id];$(id).addEventListener(['title','body','titleSize','fontSize','paragraphSpacing','titleBodyGap'].includes(id)?'input':'change',()=>{
@@ -193,6 +221,7 @@ async function init() {
   avatar=await loadAvatar(state.account?.avatarData);sourceAvatar=await loadAvatar(state.tweetSource?.account?.avatarData);showAccount();showTweetSource();redraw();
   $('restoreDraft').addEventListener('click',restorePersonalDraft);
   $('sync').addEventListener('click',()=>syncAccount());$('settings').addEventListener('click',openProfile);$('closeDialog').addEventListener('click',()=>$('profileDialog').close());$('export').addEventListener('click',exportCard);
+  $('compose').addEventListener('click',addToComposer);
   $('profileForm').addEventListener('submit',async event=>{
     event.preventDefault();const name=$('profileName').value.trim(),handle=$('profileHandle').value.trim().replace(/^@/,'');
     if(!name || !XCardAccount.validHandle(handle)) {status('profileError','请填写昵称和有效的 X ID（1–15 位字母、数字或下划线）。');return;}

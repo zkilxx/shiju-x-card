@@ -9,6 +9,10 @@
   const onMessage=(message,_sender,respond)=>{
     if(message.type==='SHIJU_PING')respond({version,session});
     if(message.type==='READ_ACCOUNT')respond({account:XCardAccount.readAccount()});
+    if(message.type==='READ_COMPOSER_URL')respond({url:ShijuComposer.url()});
+    if(message.type==='ATTACH_CARD'){
+      ShijuComposer.attach(message).then(respond).catch(error=>respond({error:error.message}));return true;
+    }
   };
   chrome.runtime.onMessage.addListener(onMessage);
   const showToast=text=>{

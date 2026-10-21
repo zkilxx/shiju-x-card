@@ -5,7 +5,7 @@
   <h1>拾句 · X 文字卡片</h1>
   <p>在 Chrome 侧边栏，把想法和喜欢的推文做成一张好看的卡片。</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.5.4-173e34" alt="Version 1.5.4">
+    <img src="https://img.shields.io/badge/version-1.6.0-173e34" alt="Version 1.6.0">
     <img src="https://img.shields.io/badge/Chrome-116%2B-4285F4?logo=googlechrome&logoColor=white" alt="Chrome 116+">
     <img src="https://img.shields.io/badge/Manifest-V3-6d7772" alt="Manifest V3">
     <img src="https://img.shields.io/badge/PNG-3240px-173e34" alt="PNG export up to 3240px">
@@ -31,6 +31,7 @@
 | 账号同步 | 读取当前 X 登录账号的头像、昵称、@ID 和主页地址，支持手动编辑与头像上传 |
 | 推文转卡片 | 鼠标悬停推文后点击「导出卡片」，使用当前模板，保留原作者和原推文链接 |
 | 独立排版 | 标题字号、正文字号、段间距、标题与正文间距分别调整 |
+| 放入 X 编辑栏 | 按当前格式和宽度生成卡片，在新标签页附上图片，由你确认发布 |
 | 高清导出 | PNG 无损 / JPG，宽度 1080、2160 或 3240px；默认 2160px PNG |
 | 多种比例 | 自动高度、正方形 1:1、竖版 4:5 |
 | 深浅色界面 | 跟随系统或手动切换，界面主题不影响卡片配色 |
@@ -50,7 +51,7 @@
 
 目前通过 Chrome 的「加载已解压的扩展程序」安装，尚未上架 Chrome 应用商店。
 
-1. 前往 [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest)，下载 `shiju-x-card-1.5.4.zip` 并解压。
+1. 前往 [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest)，下载 `shiju-x-card-1.6.0.zip` 并解压。
 2. 在 Chrome 地址栏输入 `chrome://extensions`，打开右上角的「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择解压后的 **extension** 文件夹，里面应有 `manifest.json`。
 4. 在 Chrome 工具栏的扩展菜单中固定「拾句」，点击图标打开侧边栏。
@@ -92,6 +93,12 @@ cd shiju-x-card
 
 ![卡片页脚：圆角 𝕏 标记、链接与简洁时间戳](docs/images/card-footer.png)
 
+### 放入 X 编辑栏
+
+完成卡片后，点击导出按钮旁的「放入 X 编辑栏」。插件会在新标签页打开 X，按当前 PNG/JPG 格式与分辨率生成图片，看到附件预览后提示成功；你可以补充推文文字并自行发布。原标签页保持原样。
+
+此功能需要安装扩展并登录 X，网页预览不能导入。图片超过 5MB 时需降低导出宽度。如果编辑栏恢复了带图片的草稿，插件会提示先处理该草稿，不替换现有附件。登录或上传失败时请查看新标签页提示。
+
 ### 收藏一条推文
 
 ![推文悬浮按钮演示：示例推文右下角出现导出卡片按钮](docs/images/tweet-export.png)
@@ -106,14 +113,14 @@ cd shiju-x-card
 
 账号关联使用浏览器中已有的 X 登录状态，只读取可见页面中的账号资料和公开头像。账号同步以左侧登录账号切换入口为准，不把正在浏览的他人主页当成自己的账号。
 
-草稿、资料、头像缓存和主题偏好保存在本机。插件没有后端、统计或内容上传接口，不读取密码、Cookie 或私信，也没有发推、关注等自动操作。
+草稿、资料、头像缓存和主题偏好保存在本机。插件没有自建后端或统计服务，不读取密码、Cookie 或私信。仅在点击「放入 X 编辑栏」后，将当前卡片交给 X 原生图片入口上传；发布仍由你确认，也没有自动关注等操作。
 
 | 权限 / 网站范围 | 用途 |
 | --- | --- |
 | `sidePanel` | 打开 Chrome 原生侧边栏 |
 | `storage` | 保存本机草稿、账号资料和主题偏好 |
 | `activeTab`、`scripting` | 尝试在安装前已打开的 X 页面中读取账号资料 |
-| `x.com`、`twitter.com` | 读取账号与推文文字，添加悬浮导出按钮 |
+| `x.com`、`twitter.com` | 读取账号与推文文字，添加悬浮导出按钮，并按你的点击将卡片放入 X 编辑栏 |
 | `pbs.twimg.com` | 下载公开头像并转为本机图片数据，供 Canvas 导出 |
 
 未打开 X、尚未登录或页面资料未就绪时，会提示同步失败，并明确标记缓存账号「未确认当前账号」。请确认身份后再导出，也可以手动编辑资料。
@@ -138,7 +145,7 @@ npx playwright install chromium
 npm test
 ```
 
-测试使用独立临时 Chrome 配置加载真实扩展，X 页面通过本地模拟响应验证。当前 **37 项回归测试通过**，覆盖账号同步与切换、推文按钮与下载、草稿恢复、六套模板、独立字号、单次回车段间距、手札横线、时间来源与本地时间显示、界面主题、PNG 预览/导出一致性和超长内容处理。另包含真实扩展停用/启用后的旧页面重连、重复注入不重复下载、失效连接提示测试；推文导出测试模拟了原生侧边栏打开调用。模拟测试不代表每次 X 网页更新后的线上行为均已实测。
+测试使用独立临时 Chrome 配置加载真实扩展，X 页面通过本地模拟响应验证。当前 **44 项回归测试通过**，覆盖账号同步与切换、推文按钮与下载、草稿恢复、六套模板、独立字号、单次回车段间距、手札横线、时间来源与本地时间显示、界面主题、PNG 预览/导出一致性和超长内容处理。另包含真实扩展停用/启用后的旧页面重连、重复注入不重复下载、失效连接提示测试；推文导出测试模拟了原生侧边栏打开调用。新增编辑栏测试使用模拟 X 页面，覆盖 PNG/JPG 附件、所选分辨率、已有草稿、登录/上传失败与不自动发布。模拟测试不代表每次 X 网页更新后的线上行为均已实测。
 
 生成 README 截图：
 
@@ -162,6 +169,7 @@ extension/                 Chrome 扩展源码，可直接加载
   account.js               账号与推文资料读取
   background.js            账号同步、头像下载与推文导出调度
   content.js / content.css 推文悬浮按钮
+  composer.js              X 编辑栏图片附件导入
   panel.js / sidepanel.html 编辑器、草稿与导出交互
   render.js                六套模板与 Canvas 渲染
   i18n.js / branding.js     中英文文案、语言偏好与 GitHub 标记
@@ -170,6 +178,7 @@ docs/images/               README 真实界面截图
 scripts/capture-docs.cjs    文档截图生成脚本
 tests/verify.cjs            扩展回归测试
 tests/reload.cjs            旧页面重连与扩展生命周期测试
+tests/compose.cjs           X 编辑栏附件导入测试
 design/                    初始设计概念与视觉规格
 ```
 

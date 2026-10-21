@@ -26,7 +26,7 @@ async function activeXTab() {
 }
 const reconnectingTabs=new Map();
 async function installContent(tabId) {
-  await chrome.scripting.executeScript({target:{tabId},files:['i18n.js','account.js','content.js']});
+  await chrome.scripting.executeScript({target:{tabId},files:['i18n.js','account.js','composer.js','content.js']});
   await chrome.scripting.insertCSS({target:{tabId},files:['content.css']});
 }
 function ensureContent(tabId) {
@@ -56,6 +56,33 @@ async function sync() {
   account.avatarData = await imageData(account.avatar);
   return {account};
 }
+async function openCardComposer(image) {
+  if(!/^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(image?.dataURL||'') || image.dataURL.length>7*1024*1024)throw new Error('卡片图片无效，请重新生成。');
+  let url='https://x.com/intent/tweet';
+  try {
+    const current=await activeXTab();await ensureContent(current.id);
+    const result=await chrome.tabs.sendMessage(current.id,{type:'READ_COMPOSER_URL'});
+    const candidate=new URL(result?.url);
+    if(/^https:\/\/(x\.com|twitter\.com)\/(compose\/(post|tweet)|intent\/tweet)\/?$/.test(candidate.href))url=candidate.href;
+  } catch {}
+  const tab=await chrome.tabs.create({url,active:true});
+  const deadline=Date.now()+30000;
+  let ready=false;
+  while(Date.now()<deadline) {
+    const current=await chrome.tabs.get(tab.id);
+    if(/\/i\/flow\/(login|signup)/.test(current.url||''))throw new Error('请先在新标签页登录 X，再回到拾句重试。');
+    try {
+      const pong=await chrome.tabs.sendMessage(tab.id,{type:'SHIJU_PING'});
+      if(pong?.version===chrome.runtime.getManifest().version){ready=true;break;}
+    } catch {}
+    if(current.status==='complete' && /^https:\/\/(x\.com|twitter\.com)\//.test(current.url||''))try{await ensureContent(tab.id);ready=true;break;}catch{}
+    await new Promise(resolve=>setTimeout(resolve,250));
+  }
+  if(!ready)throw new Error('X 编辑栏加载超时，请检查新标签页后重试。');
+  const result=await chrome.tabs.sendMessage(tab.id,{type:'ATTACH_CARD',id:crypto.randomUUID(),dataURL:image.dataURL,filename:image.filename});
+  if(!result?.ok)throw new Error(result?.error||'X 未能添加图片，请在新标签页查看提示。');
+  return {ok:true};
+}
 const exportClaims=new Set();
 async function prepareTweet(tweet) {
   const source=XCardAccount.tweetURL(tweet?.url);
@@ -78,6 +105,9 @@ async function claimTweet(id) {
 }
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
   const fromPanel = sender.id === chrome.runtime.id && sender.url?.split(/[?#]/)[0] === chrome.runtime.getURL('sidepanel.html');
+  if(message.type==='OPEN_CARD_COMPOSER' && fromPanel) {
+    openCardComposer(message.image).then(respond).catch(error=>respond({error:error.message}));return true;
+  }
   if (message.type === 'SYNC_ACCOUNT' && fromPanel) {
     sync().then(respond).catch(error => respond({error: error.message}));
     return true;

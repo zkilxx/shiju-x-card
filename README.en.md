@@ -5,7 +5,7 @@
   <h1>Shiju · X Text Cards</h1>
   <p>Turn your thoughts and favorite X posts into beautiful cards, right in Chrome's side panel.</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.5.4-173e34" alt="Version 1.5.4">
+    <img src="https://img.shields.io/badge/version-1.6.0-173e34" alt="Version 1.6.0">
     <img src="https://img.shields.io/badge/Chrome-116%2B-4285F4?logo=googlechrome&logoColor=white" alt="Chrome 116+">
     <img src="https://img.shields.io/badge/Manifest-V3-6d7772" alt="Manifest V3">
     <img src="https://img.shields.io/badge/PNG-3240px-173e34" alt="PNG exports up to 3240px">
@@ -33,6 +33,7 @@ No API key and no build step. Sync the X account signed in to your browser, writ
 | Light and dark UI | Follow the system or choose manually; UI appearance does not change card colors |
 | Local drafts | Save text, styling and profile details on this device; restore your own draft after exporting someone else's post |
 | Card timestamps | A rounded-square X badge precedes the full original link in smaller type; the timestamp below uses the current export time for your writing or the original publication time for imported posts |
+| Add to X | Render with the selected format and width, attach the card in a new X tab, then review and post yourself |
 | GitHub links | Open the repository from the header button; every card includes a GitHub icon and the full `github.com/zkilxx/shiju-x-card` repository address in smaller type below the Shiju brandmark |
 
 ## Interface
@@ -45,7 +46,7 @@ Select **English** in the language menu at the top. Language changes affect cont
 
 Requires desktop Chrome 116 or later. The extension is currently installed as an unpacked extension; it is not listed in the Chrome Web Store.
 
-1. Download `shiju-x-card-1.5.4.zip` from [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest) and extract it.
+1. Download `shiju-x-card-1.6.0.zip` from [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest) and extract it.
 2. Open `chrome://extensions` and enable **Developer mode** in the top-right corner.
 3. Click **Load unpacked** and select the extracted **extension** folder, which contains `manifest.json`.
 4. Pin Shiju from Chrome's extensions menu, then click its icon to open the side panel.
@@ -88,6 +89,12 @@ Times use the browser’s local time and are displayed to the minute, without se
 
 ![Card footer with the rounded X badge, link and compact timestamp](docs/images/card-footer.png)
 
+### Add a card to X
+
+Click **Add to X** beside the export button. Shiju opens a new X tab and attaches the card using the selected PNG/JPG format and resolution. It confirms success after the attachment preview appears. Add your post text and publish when ready; the original tab stays intact.
+
+Requires the installed extension and a signed-in X session. Web preview cannot attach cards. Images over 5MB require a smaller export width. Existing image attachments in a restored draft are preserved and produce a message instead of being replaced. Check the new tab if sign-in or upload fails.
+
 ### Save a post
 
 ![Hover export demonstration on a simulated post](docs/images/tweet-export-en.png)
@@ -102,14 +109,14 @@ Only the post's text is exported. Images, videos and quoted posts are excluded. 
 
 Shiju reads visible profile details and public avatars using your existing X session. Your own identity comes from the signed-in account switcher rather than a profile you happen to be viewing.
 
-Drafts, profiles, avatar caches, language and appearance preferences stay on your device. The extension has no backend, analytics or content-upload endpoint. It does not read passwords, cookies or direct messages, or automate posting and following.
+Drafts, profiles, avatar caches, language and appearance preferences stay on your device. The extension has no backend or analytics. It does not read passwords, cookies or direct messages. Only clicking **Add to X** hands the current image to X’s native upload input. You review and publish the post yourself; the extension does not automate posting or following.
 
 | Permission or site | Purpose |
 | --- | --- |
 | `sidePanel` | Open Chrome's native side panel |
 | `storage` | Save local drafts, profiles and preferences |
 | `activeTab`, `scripting` | Attempt to read an X tab that was open before installation |
-| `x.com`, `twitter.com` | Read visible account/post details and add hover export buttons |
+| `x.com`, `twitter.com` | Read visible account/post details, add hover export buttons and attach cards to X after your click |
 | `pbs.twimg.com` | Fetch public avatars and convert them to local image data for Canvas export |
 
 When X is unavailable, signed out or still loading, cached profiles are marked as unverified. Check the identity before exporting, or enter a profile manually.
@@ -132,7 +139,7 @@ npx playwright install chromium
 npm test
 ```
 
-The regression suite loads the real extension in an isolated temporary Chrome profile. X pages use mocked responses. All **37 regression checks pass**. Coverage includes profile synchronization, post buttons and downloads, draft restoration, templates, typography, paragraph spacing, notebook rules, export/publication timestamps, local time formatting, languages, appearance and identical PNG preview/export pixels. Additional checks cover a real disable/enable cycle with the X document preserved, reconnects without duplicate downloads, and localized invalid-context guidance. Post-export tests stub the native side-panel opening call. Mocked tests do not guarantee live compatibility after every X page update.
+The regression suite loads the real extension in an isolated temporary Chrome profile. X pages use mocked responses. All **44 regression checks pass**. Coverage includes profile synchronization, post buttons and downloads, draft restoration, templates, typography, paragraph spacing, notebook rules, export/publication timestamps, local time formatting, languages, appearance and identical PNG preview/export pixels. Additional checks cover a real disable/enable cycle with the X document preserved, reconnects without duplicate downloads, and localized invalid-context guidance. Post-export tests stub the native side-panel opening call. Composer tests use mocked X pages to verify PNG/JPG attachments, selected resolutions, existing drafts, sign-in/upload errors and no automatic posting. Mocked tests do not guarantee live compatibility after every X page update.
 
 Regenerate documentation screenshots with demo profiles:
 
@@ -156,6 +163,7 @@ extension/                  Loadable Chrome extension
   account.js                Account and post extraction
   background.js             Sync, avatar retrieval and export coordination
   content.js / content.css  Post hover buttons
+  composer.js               X composer attachment transfer
   panel.js / sidepanel.html Editor, drafts and export interactions
   render.js                 Canvas rendering and templates
   i18n.js / branding.js      Language preferences, translations and GitHub mark
@@ -164,6 +172,7 @@ docs/images/                Actual UI screenshots for the README
 scripts/capture-docs.cjs     Screenshot generator
 tests/verify.cjs             Regression suite
 tests/reload.cjs             Existing-page reconnect and extension lifecycle checks
+tests/compose.cjs            Composer attachment checks
 design/                     Initial concept and visual specifications
 ```
 

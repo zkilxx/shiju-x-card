@@ -1,6 +1,20 @@
 (() => {
   if(globalThis.ShijuI18n)return;
   const english={
+  "放入 X 编辑栏":"Add to X",
+  "正在添加…":"Adding…",
+  "在新标签页打开 X 并附上当前卡片，由你确认发布":"Open X in a new tab with this card attached, ready for your review",
+  "安装 Chrome 插件后，即可将卡片放入 X 编辑栏。":"Install the Chrome extension to add your card to the X composer.",
+  "卡片已放入 X 编辑栏，检查后即可发布。":"Card added to the X composer. Review it before posting.",
+  "添加失败：{error}":"Could not add card: {error}",
+  "卡片图片无效，请重新生成。":"Invalid card image. Generate it again.",
+  "图片超过 5MB，请调低卡片宽度后重试。":"The image exceeds 5MB. Choose a smaller card width and try again.",
+  "请先在新标签页登录 X，再回到拾句重试。":"Sign in to X in the new tab, then return to Shiju and try again.",
+  "未找到 X 图片上传入口，请确认已登录并打开推文编辑栏后重试。":"Could not find the X image input. Sign in and open the post composer, then try again.",
+  "X 编辑栏已有图片，请先处理现有草稿，再重试。":"The X composer already has images. Finish handling that draft before trying again.",
+  "X 未能添加图片，请在新标签页查看提示。":"X could not add the image. Check the message in the new tab.",
+  "X 尚未显示图片预览，请检查新标签页，避免重复添加。":"X has not shown an image preview. Check the new tab before adding it again.",
+  "X 编辑栏加载超时，请检查新标签页后重试。":"The X composer took too long to load. Check the new tab and try again.",
   "未读到这条推文的发布时间，请刷新 X 页面后重试。":"Could not read the publication time. Refresh X and try again.",
   "这张推文卡片缺少发布时间，请返回 X 重新生成。":"This saved post has no publication time. Return to X and generate the card again.",
   "插件已更新，请刷新 X 页面后重试。":"The extension was updated. Refresh X and try again.",

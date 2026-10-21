@@ -1,9 +1,10 @@
 {
   "name": "shiju-x-card",
-  "version": "1.5.4",
+  "version": "1.6.0",
   "private": true,
   "scripts": {
-    "test": "node tests/verify.cjs && node tests/reload.cjs",
+    "test": "node tests/verify.cjs && node tests/reload.cjs && node tests/compose.cjs",
+    "test:compose": "node tests/compose.cjs",
     "test:reload": "node tests/reload.cjs"
   },
   "devDependencies": {
