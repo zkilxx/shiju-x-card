@@ -44,9 +44,11 @@ async function prepareTweet(tweet) {
   if(!source || !tweet?.account || tweet.account.handle?.toLowerCase()!==source.handle.toLowerCase())throw new Error('推文作者或原始链接无效。');
   const text=typeof tweet.text==='string'?tweet.text.trim():'';
   if(!text || text.length>2400)throw new Error('只支持 1–2400 字符的推文正文，请先展开全文。');
+  const publishedAt=XCardAccount.timestamp(tweet.publishedAt);
+  if(!publishedAt)throw new Error('未读到这条推文的发布时间，请刷新 X 页面后重试。');
   const account={name:String(tweet.account.name || source.handle).slice(0,60),handle:source.handle,url:`https://x.com/${source.handle}`,source:'tweet'};
   account.avatarData=await imageData(tweet.account.avatar);
-  return {id:crypto.randomUUID(),text,url:source.url,account,createdAt:Date.now(),status:'ready'};
+  return {id:crypto.randomUUID(),text,url:source.url,publishedAt,account,createdAt:Date.now(),status:'ready'};
 }
 async function claimTweet(id) {
   if(typeof id!=='string' || exportClaims.has(id))return {claimed:false};

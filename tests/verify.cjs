@@ -24,10 +24,11 @@ async function sameCard(page,expected,actual=null) {
 async function main(){
   await fs.mkdir(output,{recursive:true});
   const userData=await fs.mkdtemp(path.join(os.tmpdir(),'shiju-chrome-'));
-  context=await chromium.launchPersistentContext(userData,{channel:'chromium',headless:true,acceptDownloads:true,viewport:{width:440,height:1200},args:[`--disable-extensions-except=${path.join(root,'extension')}`,`--load-extension=${path.join(root,'extension')}`]});
+  context=await chromium.launchPersistentContext(userData,{channel:'chromium',headless:true,acceptDownloads:true,viewport:{width:440,height:1200},timezoneId:'Asia/Shanghai',args:[`--disable-extensions-except=${path.join(root,'extension')}`,`--load-extension=${path.join(root,'extension')}`]});
   const worker=context.serviceWorkers()[0] || await context.waitForEvent('serviceworker');
   const id=new URL(worker.url()).host;
   const panel=await context.newPage();
+  const clockStart=new Date();await panel.clock.setFixedTime(clockStart);
   const errors=[];panel.on('pageerror',e=>errors.push(e.message));
   await panel.goto(`chrome-extension://${id}/sidepanel.html`);
   await panel.locator('#templates button').first().waitFor();
@@ -108,7 +109,7 @@ async function main(){
         const c=document.createElement('canvas'),ctx=c.getContext('2d'),calls=[],original=ctx.fillText;
         ctx.fillText=function(text,x,y,...rest){calls.push({text,x,y,width:this.measureText(text).width});return original.call(this,text,x,y,...rest);};
         const url='https://x.com/the_author/status/1234567890123456789';
-        renderCard(c,{title:'标题',body:'正文',fontSize:38,titleSize:80,template:template.id,ratio:'auto',tweetSource:{url,account:{name:'原作者',handle:'the_author'}}});
+        renderCard(c,{title:'标题',body:'正文',fontSize:38,titleSize:80,template:template.id,ratio:'auto',tweetSource:{url,publishedAt:'2026-10-21T03:04:05.000Z',account:{name:'原作者',handle:'the_author'}}});
         const repo=calls.find(call=>call.text==='github.com/zkilxx/shiju-x-card'),brand=calls.find(call=>call.text==='拾句'),link=calls.find(call=>call.text===url.replace('https://',''));
         const icon=ctx.getImageData(Math.floor(repo.x-25),Math.floor(repo.y+2),18,18).data,bg=ctx.getImageData(0,0,1,1).data;let ink=0;
         for(let i=0;i<icon.length;i+=4)if(Math.abs(icon[i]-bg[0])+Math.abs(icon[i+1]-bg[1])+Math.abs(icon[i+2]-bg[2])>12)ink++;
@@ -139,6 +140,51 @@ async function main(){
     await panel.locator('#format').selectOption('jpeg');
     const jpgPending=panel.waitForEvent('download');await panel.locator('#export').click();const jpg=await jpgPending;const jpgPath=path.join(output,'export-2160.jpg');await jpg.saveAs(jpgPath);
     const bytes=await fs.readFile(jpgPath);assert.equal(bytes.readUInt16BE(0),0xffd8);assert.match(jpg.suggestedFilename(),/\.jpg$/);
+  });
+  await check('Personal cards record each export click time and refresh the matching preview',async()=>{
+    const downloads=[];
+    for(const offset of [0,65000]) {
+      const when=new Date(clockStart.getTime()+offset);await panel.clock.setFixedTime(when);
+      const pending=panel.waitForEvent('download');await panel.locator('#export').click();const download=await pending;
+      assert.ok(download.suggestedFilename().includes(when.toISOString().replace(/[:.]/g,'-')));
+      const draft=await panel.evaluate(async()=>((await chrome.storage.local.get('shijuDraft')).shijuDraft));
+      assert.equal(draft.exportedAt,undefined);
+      const {renderCard,formatTimestamp}=await panel.evaluate(async()=>({renderCard:typeof (await import('./render.js')).renderCard,formatTimestamp:(await import('./render.js')).formatTimestamp(new Date().toISOString())}));
+      assert.equal(renderCard,'function');assert.match(formatTimestamp,/UTC\+08:00$/);
+      downloads.push(await panel.locator('#preview').evaluate(c=>c.toDataURL()));
+      await download.saveAs(path.join(output,`timestamp-${offset}.jpg`));
+    }
+    assert.notEqual(downloads[0],downloads[1]);
+    await panel.clock.setFixedTime(clockStart);await panel.reload();await panel.locator('#templates button').first().waitFor();
+  });
+  await check('Publication time comes from the original time element and invalid metadata never falls back to export time',async()=>{
+    const parsed=await panel.evaluate(()=>{
+      const article=document.createElement('article');article.dataset.testid='tweet';
+      article.innerHTML='<div data-testid="quoteTweet"><a href="/quoted/status/999"><time datetime="2020-01-01T00:00:00Z">quoted</time></a></div><div data-testid="User-Name"><a href="/author">Author</a><a href="/author/status/1234567890123456789"><time datetime="2026-10-21T11:04:05+08:00">2h</time></a></div><div data-testid="tweetText">Original words</div>';
+      const tweet=XCardAccount.readTweet(article);article.querySelector('[data-testid="User-Name"] time').removeAttribute('datetime');
+      let error;try{XCardAccount.readTweet(article);}catch(e){error=e.message;}
+      return {tweet,error,bad:XCardAccount.timestamp('2026-10-21 11:04:05')};
+    });
+    assert.equal(parsed.tweet.publishedAt,'2026-10-21T03:04:05.000Z');assert.equal(parsed.tweet.account.handle,'author');assert.match(parsed.error,/发布时间/);assert.equal(parsed.bad,null);
+    const prepared=await worker.evaluate(async tweet=>prepareTweet(tweet),parsed.tweet);assert.equal(prepared.publishedAt,'2026-10-21T03:04:05.000Z');assert.notEqual(prepared.createdAt,Date.parse(prepared.publishedAt));
+    const error=await worker.evaluate(async tweet=>{delete tweet.publishedAt;try{await prepareTweet(tweet);}catch(e){return e.message;}},parsed.tweet);assert.match(error,/发布时间/);
+  });
+  await check('Timestamp and rounded X badge render below/alongside the link without touching GitHub branding',async()=>{
+    const cases=await panel.evaluate(async()=>{
+      const {renderCard,formatTimestamp,templates}=await import('./render.js');
+      const formatted=formatTimestamp('2026-10-21T20:04:05.000Z');
+      return {formatted,cards:templates.map(template=>{
+        const c=document.createElement('canvas'),ctx=c.getContext('2d'),calls=[],original=ctx.fillText;
+        ctx.fillText=function(text,x,y,maxWidth){calls.push({text,x,y,width:this.measureText(text).width,maxWidth});return original.call(this,text,x,y,...(maxWidth===undefined?[]:[maxWidth]));};
+        renderCard(c,{title:'Title',body:'Body',titleSize:80,fontSize:38,template:template.id,ratio:'auto',exportedAt:'2026-10-21T20:04:05.000Z'});
+        const stamp=calls.find(call=>call.text===formatted),link=calls.find(call=>call.text==='x.com/yourname'),repo=calls.find(call=>call.text==='github.com/zkilxx/shiju-x-card');
+        const data=ctx.getImageData(88,c.height-139+34,30,30).data;let black=0,white=0;
+        for(let i=0;i<data.length;i+=4){if(data[i]===17&&data[i+1]===17&&data[i+2]===17)black++;if(data[i]>245&&data[i+1]>245&&data[i+2]>245)white++;}
+        return {stamp,link,repo,black,white};
+      })};
+    });
+    assert.equal(cases.formatted,'2026-10-22 04:04:05 UTC+08:00');
+    for(const c of cases.cards){assert.ok(c.stamp&&c.link&&c.repo);assert.equal(c.stamp.x,c.link.x);assert.ok(c.stamp.y>c.link.y+30);assert.ok(c.stamp.width<=c.stamp.maxWidth);assert.ok(c.stamp.x+c.stamp.width<c.repo.x-25);assert.ok(c.black>300);assert.ok(c.white>20);}
   });
   await check('Title and body font sizes adjust independently and persist',async()=>{
     await panel.locator('#titleSize').fill('80');
@@ -271,7 +317,7 @@ async function main(){
     await worker.evaluate(()=>{chrome.sidePanel.open=async()=>{globalThis.shijuPanelOpenRequested=true;};});
     await x.evaluate(()=>{
       const article=document.createElement('article');article.dataset.testid='tweet';article.id='source-tweet';article.style.cssText='min-height:220px;padding:20px;margin-top:30px';
-      article.innerHTML='<div data-testid="UserAvatar-Container-the_author"><img src="https://pbs.twimg.com/profile_images/1/author.png" width="40"></div><div data-testid="User-Name"><a href="/the_author">原作者</a><a href="/the_author/status/1234567890123456789"><time>2026-10-21</time></a></div><div data-testid="tweetText">这是原作者的推文。<br><br>保留原文，也保留出处。</div><div data-testid="quoteTweet" role="link"><div data-testid="tweetText">被引用的文字不能混入正文</div></div>';
+      article.innerHTML='<div data-testid="UserAvatar-Container-the_author"><img src="https://pbs.twimg.com/profile_images/1/author.png" width="40"></div><div data-testid="User-Name"><a href="/the_author">原作者</a><a href="/the_author/status/1234567890123456789"><time datetime="2026-10-21T03:04:05.000Z">2026-10-21</time></a></div><div data-testid="tweetText">这是原作者的推文。<br><br>保留原文，也保留出处。</div><div data-testid="quoteTweet" role="link"><div data-testid="tweetText">被引用的文字不能混入正文</div></div>';
       document.body.append(article);
     });
     await x.locator('#source-tweet > .shiju-tweet-export').waitFor({state:'attached'});
@@ -284,6 +330,7 @@ async function main(){
     const pending=panel.waitForEvent('download');await x.locator('#source-tweet > .shiju-tweet-export').click();const download=await pending;
     await download.saveAs(path.join(output,`tweet-one-click${path.extname(download.suggestedFilename())}`));assert.match(download.suggestedFilename(),/the_author/);
     assert.equal(await panel.locator('#accountHandle').innerText(),'@new_account');assert.equal(await panel.locator('#sourceLink').getAttribute('href'),'https://x.com/the_author/status/1234567890123456789');
+    await eventually(async()=>await panel.evaluate(async()=>((await chrome.storage.local.get('shijuDraft')).shijuDraft?.tweetSource?.publishedAt))==='2026-10-21T03:04:05.000Z');
     assert.equal(await panel.locator('#title').inputValue(),'');assert.equal(await panel.locator('#body').inputValue(),'这是原作者的推文。\n\n保留原文，也保留出处。');
     assert.match(await panel.locator('#preview').getAttribute('aria-label'),/^原作者的卡片/);
     const pixel=await panel.locator('#preview').evaluate(c=>Array.from(c.getContext('2d').getImageData(0,0,1,1).data));assert.deepEqual(pixel,[241,236,223,255]);
@@ -313,6 +360,13 @@ async function main(){
     await eventually(async()=>await x.locator('#english-tweet > .shiju-tweet-export').innerText()==='Export card');
     assert.equal(await panel.locator('#body').inputValue(),body);
     await panel.locator('#languageMode').selectOption('zh-CN');await eventually(async()=>await x.locator('#english-tweet > .shiju-tweet-export').innerText()==='导出卡片');
+  });
+  await check('Legacy imported drafts without publication metadata cannot export a fabricated timestamp',async()=>{
+    const saved=await panel.evaluate(async()=>((await chrome.storage.local.get('shijuDraft')).shijuDraft));
+    await panel.evaluate(draft=>chrome.storage.local.set({shijuDraft:{...draft,tweetSource:{url:'https://x.com/author/status/1234567890123456789',account:{name:'Author',handle:'author'}}}}),saved);
+    await panel.reload();await panel.locator('#templates button').first().waitFor();
+    await eventually(async()=>/缺少发布时间/.test(await panel.locator('#notice').innerText()));assert.equal(await panel.locator('#export').isDisabled(),true);
+    await panel.evaluate(draft=>chrome.storage.local.set({shijuDraft:draft}),saved);await panel.reload();await panel.locator('#templates button').first().waitFor();
   });
   await check('Existing low-resolution draft upgrades to lossless HD while new explicit settings persist',async()=>{
     const saved=await panel.evaluate(async()=>{const {shijuDraft}=await chrome.storage.local.get('shijuDraft');return shijuDraft;});

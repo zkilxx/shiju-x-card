@@ -1,6 +1,8 @@
 (() => {
   if(globalThis.ShijuI18n)return;
   const english={
+  "未读到这条推文的发布时间，请刷新 X 页面后重试。":"Could not read the publication time. Refresh X and try again.",
+  "这张推文卡片缺少发布时间，请返回 X 重新生成。":"This saved post has no publication time. Return to X and generate the card again.",
   "拾句 · X 文字卡片": "Shiju · X Text Cards",
   "拾句": "Shiju",
   "界面主题": "Appearance",

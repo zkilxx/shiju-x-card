@@ -5,7 +5,7 @@ const $ = id => document.getElementById(id);
 const extension = Boolean(globalThis.chrome?.runtime?.id);
 const defaults = {title:$('title').value,body:$('body').value,template:'white',ratio:'auto',titleSize:106,fontSize:38,paragraphSpacing:70,titleBodyGap:38,format:'png',resolution:2160,exportQualityVersion:2,account:null,tweetSource:null,personalDraft:null};
 let state = {...defaults}, avatar = null, sourceAvatar=null, saveTimer, renderTimer, syncGeneration=0, saveRevision=0;
-let tweetQueue=Promise.resolve();
+let tweetQueue=Promise.resolve(),previewExportedAt=new Date().toISOString();
 let saving=Promise.resolve(), exporting=false, renderValid=false;
 const storage = {
   async get() {return extension ? (await chrome.storage.local.get('shijuDraft')).shijuDraft : JSON.parse(localStorage.getItem('shijuDraft') || 'null');},
@@ -26,7 +26,7 @@ async function importTweet(request) {
   if(!claim?.claimed)return;
   const image=await loadAvatar(request.account.avatarData);
   if(!state.tweetSource)state.personalDraft={title:state.title,body:state.body,ratio:state.ratio,fontSize:state.fontSize,titleSize:state.titleSize,paragraphSpacing:state.paragraphSpacing,titleBodyGap:state.titleBodyGap};
-  state.tweetSource={url:request.url,account:request.account,requestId:request.id};
+  state.tweetSource={url:request.url,publishedAt:XCardAccount.timestamp(request.publishedAt),account:request.account,requestId:request.id};
   state.title='';state.body=request.text;sourceAvatar=image;
   try{renderCard(document.createElement('canvas'),state,sourceAvatar,1080);}catch{
     state.ratio='auto';
@@ -62,7 +62,7 @@ function updateRangeFill(input) {
 }
 function redraw() {
   try {
-    const dimensions=renderCard($('preview'),state,cardAvatar(),Number(state.resolution));
+    const dimensions=renderCard($('preview'),{...state,exportedAt:previewExportedAt},cardAvatar(),Number(state.resolution));
     $('preview').removeAttribute('data-i18n-aria');
     $('dimensions').textContent=`${dimensions.width} × ${dimensions.height}${dimensions.fontSize<state.fontSize?t(' · 字号已适配'):''}`;
     $('preview').setAttribute('aria-label',t('{name}的卡片：{title}。{body}',{name:cardAccount()?.name || t('示例账号'),title:state.title,body:state.body}));
@@ -145,12 +145,13 @@ async function exportCard() {
   if(!renderValid)return;
   exporting=true;$('export').disabled=true;exportLabel();
   try {
-    const snapshot=structuredClone(state),author=cardAccount();
+    previewExportedAt=new Date().toISOString();redraw();
+    const snapshot={...structuredClone(state),exportedAt:previewExportedAt},author=cardAccount();
     const canvas=document.createElement('canvas');renderCard(canvas,snapshot,cardAvatar(),Number(state.resolution));
     const mime=state.format==='jpeg'?'image/jpeg':'image/png';
     const blob=await new Promise(resolve=>canvas.toBlob(resolve,mime,1));if(!blob)throw new Error('图片生成失败，请重试。');
     const url=URL.createObjectURL(blob), link=document.createElement('a');
-    link.href=url;link.download=`${ShijuI18n.language==='en'?'Shiju':'拾句'}-${author.handle}-${new Date().toISOString().replace(/[:.]/g,'-')}.${snapshot.format==='jpeg'?'jpg':'png'}`;
+    link.href=url;link.download=`${ShijuI18n.language==='en'?'Shiju':'拾句'}-${author.handle}-${snapshot.exportedAt.replace(/[:.]/g,'-')}.${snapshot.format==='jpeg'?'jpg':'png'}`;
     document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
     notice('{format} 图片已生成，正在下载。',{format:state.format==='jpeg'?'JPG':'PNG'});
   } catch(error) {notice('导出失败：{error}',{error:t(error.message)});}
@@ -173,6 +174,7 @@ async function init() {
     state.format=state.format==='jpeg'?'jpeg':'png';
     if(state.account && (!XCardAccount.validHandle(state.account.handle) || typeof state.account.name!=='string'))state.account=null;
     if(state.account?.avatarData && !/^data:image\/(png|jpeg|webp|gif);base64,/.test(state.account.avatarData))state.account.avatarData='';
+    if(state.tweetSource)state.tweetSource.publishedAt=XCardAccount.timestamp(state.tweetSource.publishedAt);
     if(state.tweetSource && (!XCardAccount.validHandle(state.tweetSource.account?.handle) || !XCardAccount.tweetURL(state.tweetSource.url)))state.tweetSource=null;
   } catch {notice('无法读取上次草稿，已打开新的编辑页。');}
   renderTemplates();selectTemplate();

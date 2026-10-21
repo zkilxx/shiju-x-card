@@ -6,6 +6,10 @@
       return url.protocol === 'https:' && url.hostname === 'pbs.twimg.com' && url.pathname.startsWith('/profile_images/') ? url.href : '';
     } catch { return ''; }
   };
+  const timestamp=value=>{
+    if(typeof value!=='string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/i.test(value))return null;
+    const millis=Date.parse(value);return Number.isFinite(millis)?new Date(millis).toISOString():null;
+  };
   function readAccount(doc = document) {
     // Only the logged-in account switcher is authoritative. Never read UserName in a profile or tweet.
     const switcher = doc.querySelector('[data-testid="SideNav_AccountSwitcher_Button"]');
@@ -31,7 +35,9 @@
     } catch {return null;}
   }
   function readTweet(article) {
-    const link=article.querySelector('time')?.closest('a[href]');
+    const header=article.querySelector('[data-testid="User-Name"], [data-testid="UserName"]') || article;
+    const time=header.querySelector('time') || [...article.querySelectorAll('time')].find(node=>!node.closest('[data-testid="quoteTweet"]'));
+    const link=time?.closest('a[href]');
     const source=tweetURL(link?.getAttribute('href'));
     if(!source)throw new Error('还没有读到这条推文的原始链接，请等页面加载完成。');
     if(article.querySelector('[data-testid="tweet-text-show-more-link"]'))throw new Error('请先展开这条推文的全文，再导出卡片。');
@@ -39,12 +45,13 @@
     const text=(textNode?.innerText || textNode?.textContent || '').trim();
     if(!text)throw new Error('这条推文没有可导出的文字。');
     if(text.length>2400)throw new Error('这条推文超过 2400 字符，请分段制作卡片。');
-    const header=article.querySelector('[data-testid="User-Name"], [data-testid="UserName"]') || article;
+    const publishedAt=timestamp(time?.getAttribute('datetime'));
+    if(!publishedAt)throw new Error('未读到这条推文的发布时间，请刷新 X 页面后重试。');
     const nameLink=[...header.querySelectorAll('a[href]')].find(a=>{
       try {return new URL(a.getAttribute('href'),'https://x.com').pathname.toLowerCase()===`/${source.handle.toLowerCase()}` && (a.innerText || a.textContent || '').trim();}catch{return false;}
     });
     const image=article.querySelector('[data-testid^="UserAvatar-Container-"] img, img[src*="/profile_images/"]');
-    return {text,url:source.url,account:{name:((nameLink?.innerText || nameLink?.textContent || source.handle).trim()).slice(0,60),handle:source.handle,url:`https://x.com/${source.handle}`,avatar:avatarURL(image?.currentSrc || image?.getAttribute('src')),source:'tweet'}};
+    return {text,url:source.url,publishedAt,account:{name:((nameLink?.innerText || nameLink?.textContent || source.handle).trim()).slice(0,60),handle:source.handle,url:`https://x.com/${source.handle}`,avatar:avatarURL(image?.currentSrc || image?.getAttribute('src')),source:'tweet'}};
   }
-  globalThis.XCardAccount = {readAccount, validHandle, avatarURL, tweetURL, readTweet};
+  globalThis.XCardAccount = {timestamp,readAccount, validHandle, avatarURL, tweetURL, readTweet};
 })();

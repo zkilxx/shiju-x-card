@@ -1,4 +1,4 @@
-import {githubPath,repositoryLabel} from './branding.js';
+import {githubPath,repositoryLabel,xPath} from './branding.js';
 export const templates = [
   {id:'white', name:'素白', bg:'#ffffff', fg:'#242c27', muted:'#85918a', line:'#dce2dd', accent:'#173e34', serif:true},
   {id:'ink', name:'墨夜', bg:'#262827', fg:'#f5f4ef', muted:'#abb0aa', line:'#4b514c', accent:'#d6dacb', serif:true},
@@ -61,6 +61,16 @@ function drawBrandmark(ctx, right, y, color) {
   ctx.restore();
   return width;
 }
+export function formatTimestamp(value) {
+  if(typeof value!=='string' || !value)return '';
+  const date=new Date(value);if(!Number.isFinite(date.getTime()))return '';
+  const pad=value=>String(value).padStart(2,'0'),offset=-date.getTimezoneOffset(),absolute=Math.abs(offset);
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())} UTC${offset>=0?'+':'-'}${pad(Math.floor(absolute/60))}:${pad(absolute%60)}`;
+}
+function drawXBadge(ctx,x,y) {
+  ctx.save();ctx.fillStyle='#111111';ctx.beginPath();ctx.roundRect(x,y,30,30,8);ctx.fill();
+  ctx.translate(x+7,y+7);ctx.scale(16/24,16/24);ctx.fillStyle='#ffffff';ctx.fill(new Path2D(xPath));ctx.restore();
+}
 function drawRepository(ctx,right,y,color) {
   ctx.save();
   ctx.font=`400 18px ${sans}`;ctx.fillStyle=color;
@@ -70,6 +80,7 @@ function drawRepository(ctx,right,y,color) {
   ctx.translate(left,y+2);ctx.scale(iconSize/16,iconSize/16);
   ctx.fill(new Path2D(githubPath));
   ctx.restore();
+  return textWidth+gap+iconSize;
 }
 export async function loadAvatar(data) {
   if (!/^data:image\/(png|jpeg|webp|gif);base64,/.test(data || '')) return null;
@@ -79,6 +90,8 @@ export function renderCard(canvas, state, avatar = null, outputWidth = 1080) {
   const template = templates.find(t=>t.id===state.template) || templates[0];
   const ctx = canvas.getContext('2d');
   const padding = 88, inner = 1080-padding*2;
+  const stamp=formatTimestamp(state.tweetSource?state.tweetSource.publishedAt:state.exportedAt);
+  if(state.tweetSource && !stamp)throw new Error('这张推文卡片缺少发布时间，请返回 X 重新生成。');
   const title = state.title.trim(), body = state.body.trim();
   const requestedBodySize = Number(state.fontSize) || 38;
   const requestedTitleSize = Number(state.titleSize) || Math.round(requestedBodySize * 2.8);
@@ -158,11 +171,13 @@ export function renderCard(canvas, state, avatar = null, outputWidth = 1080) {
   ctx.font=`400 25px ${sans}`;ctx.fillStyle=template.muted;
   const footerURL=state.tweetSource?.url?.replace(/^https:\/\//,'') || `x.com/${account.handle}`;
   const brandWidth=drawBrandmark(ctx,1080-padding,footerY+35,template.muted);
-  const linkWidth=inner-brandWidth-36;
+  const linkX=padding+42,linkWidth=inner-brandWidth-36-42;
+  drawXBadge(ctx,padding,footerY+34);
   let linkSize=25;
   while(ctx.measureText(footerURL).width>linkWidth && linkSize>19){linkSize--;ctx.font=`400 ${linkSize}px ${sans}`;}
   // Keep the complete original URL while reserving clear space for the brandmark.
-  ctx.fillText(footerURL,padding,footerY+38,linkWidth);
-  drawRepository(ctx,1080-padding,footerY+82,template.muted);
+  ctx.fillText(footerURL,linkX,footerY+38,linkWidth);
+  const repositoryWidth=drawRepository(ctx,1080-padding,footerY+82,template.muted);
+  if(stamp){ctx.font=`400 18px ${sans}`;ctx.fillStyle=template.muted;ctx.fillText(stamp,linkX,footerY+82,1080-padding-repositoryWidth-28-linkX);}
   return {width:canvas.width,height:canvas.height,fontSize,titleSize,template:template.name};
 }
