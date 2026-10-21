@@ -1,9 +1,11 @@
+[简体中文](README.md) · [English](README.en.md)
+
 <div align="center">
   <img src="extension/icons/icon128.png" alt="拾句 Logo" width="80">
   <h1>拾句 · X 文字卡片</h1>
   <p>在 Chrome 侧边栏，把想法和喜欢的推文做成一张好看的卡片。</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.3.1-173e34" alt="Version 1.3.1">
+    <img src="https://img.shields.io/badge/version-1.4.0-173e34" alt="Version 1.4.0">
     <img src="https://img.shields.io/badge/Chrome-116%2B-4285F4?logo=googlechrome&logoColor=white" alt="Chrome 116+">
     <img src="https://img.shields.io/badge/Manifest-V3-6d7772" alt="Manifest V3">
     <img src="https://img.shields.io/badge/PNG-3240px-173e34" alt="PNG export up to 3240px">
@@ -21,7 +23,10 @@
 
 | 功能 | 说明 |
 | --- | --- |
+| 中英双语 | 顶部可切换简体中文 / English，语言偏好单独保存，原文和账号资料保持不变，品牌名始终显示「拾句」 |
+| GitHub 入口 | 左上角展示插件 Logo，右上角 GitHub 按钮直达仓库；卡片右下角 Logo 下附 GitHub 图标与仓库地址 |
 | 六套模板 | 素白、墨夜、松绿、赤陶、手札、雾蓝；手札横线跟随正文，不穿过标题 |
+| 演示资料 | 未关联账号时使用 X Logo 占位；同步或上传头像后显示真实头像 |
 | 账号同步 | 读取当前 X 登录账号的头像、昵称、@ID 和主页地址，支持手动编辑与头像上传 |
 | 推文转卡片 | 鼠标悬停推文后点击「导出卡片」，使用当前模板，保留原作者和原推文链接 |
 | 独立排版 | 标题字号、正文字号、段间距、标题与正文间距分别调整 |
@@ -44,7 +49,7 @@
 
 目前通过 Chrome 的「加载已解压的扩展程序」安装，尚未上架 Chrome 应用商店。
 
-1. 前往 [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest)，下载 `shiju-x-card-1.3.1.zip` 并解压。
+1. 前往 [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest)，下载 `shiju-x-card-1.4.0.zip` 并解压。
 2. 在 Chrome 地址栏输入 `chrome://extensions`，打开右上角的「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择解压后的 **extension** 文件夹，里面应有 `manifest.json`。
 4. 在 Chrome 工具栏的扩展菜单中固定「拾句」，点击图标打开侧边栏。
@@ -106,6 +111,8 @@ cd shiju-x-card
 
 未打开 X、尚未登录或页面资料未就绪时，会提示同步失败，并明确标记缓存账号「未确认当前账号」。请确认身份后再导出，也可以手动编辑资料。
 
+仓库入口为 [github.com/zkilxx/shiju-x-card](https://github.com/zkilxx/shiju-x-card)。卡片底部的仓库地址是图片文字；侧边栏右上角的 GitHub 按钮可点击跳转。切换语言仅改变操作界面与提示，不翻译你的标题、正文或账号资料。
+
 ## 使用限制
 
 - 需要 Chrome 116 或更新版本；目前针对桌面 Chrome 开发。
@@ -116,7 +123,7 @@ cd shiju-x-card
 
 ## 本地开发
 
-扩展使用原生 JavaScript、CSS 和 Canvas，没有打包步骤。`npm` 依赖仅用于开发验证与文档截图。
+开发需要 Node.js 20 或更新版本。扩展使用原生 JavaScript、CSS 和 Canvas，没有打包步骤。`npm` 依赖仅用于开发验证与文档截图。
 
 ```sh
 npm install
@@ -124,7 +131,7 @@ npx playwright install chromium
 npm test
 ```
 
-测试使用独立临时 Chrome 配置加载真实扩展，X 页面通过本地模拟响应验证。当前 **25 项回归测试通过**，覆盖账号同步与切换、推文按钮与下载、草稿恢复、六套模板、独立字号、单次回车段间距、手札横线、界面主题、PNG 预览/导出一致性和超长内容处理。模拟测试不代表每次 X 网页更新后的线上行为均已实测。
+测试使用独立临时 Chrome 配置加载真实扩展，X 页面通过本地模拟响应验证。当前 **29 项回归测试通过**，覆盖账号同步与切换、推文按钮与下载、草稿恢复、六套模板、独立字号、单次回车段间距、手札横线、界面主题、PNG 预览/导出一致性和超长内容处理。模拟测试不代表每次 X 网页更新后的线上行为均已实测。
 
 生成 README 截图：
 
@@ -150,6 +157,7 @@ extension/                 Chrome 扩展源码，可直接加载
   content.js / content.css 推文悬浮按钮
   panel.js / sidepanel.html 编辑器、草稿与导出交互
   render.js                六套模板与 Canvas 渲染
+  i18n.js / branding.js     中英文文案、语言偏好与 GitHub 标记
   theme.js / styles.css    系统主题和界面样式
 docs/images/               README 真实界面截图
 scripts/capture-docs.cjs    文档截图生成脚本
@@ -158,3 +166,5 @@ design/                    初始设计概念与视觉规格
 ```
 
 实现参考：[Chrome Side Panel API](https://developer.chrome.com/docs/extensions/reference/api/sidePanel)、[Content Scripts](https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts)。
+
+GitHub 标记来自 [Primer Octicons](https://github.com/primer/octicons)，MIT 授权说明保存在 [THIRD_PARTY_NOTICES.txt](extension/THIRD_PARTY_NOTICES.txt)。

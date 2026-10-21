@@ -9,6 +9,18 @@ const results=[];
 let context;
 const check=(name,fn)=>Promise.resolve().then(fn).then(()=>{results.push({name,status:'passed'});console.log(`PASS ${name}`);});
 const eventually=async(fn)=>{for(let i=0;i<50;i++){if(await fn())return;await new Promise(r=>setTimeout(r,100));}throw new Error('Condition did not become true');};
+// Font caches can change a handful of antialiasing channels by 1/255 across redraws.
+// Keep geometry exact and tolerate only that tiny raster rounding difference.
+async function sameCard(page,expected,actual=null) {
+  const difference=await page.evaluate(async({expected,actual})=>{
+    const read=async src=>{const img=new Image();img.src=src;await img.decode();const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const ctx=c.getContext('2d');ctx.drawImage(img,0,0);return {width:c.width,height:c.height,data:ctx.getImageData(0,0,c.width,c.height).data};};
+    const a=await read(expected),b=await read(actual||document.querySelector('#preview').toDataURL());
+    if(a.width!==b.width||a.height!==b.height)return {sameSize:false};
+    let changed=0,max=0;for(let i=0;i<a.data.length;i++)if(a.data[i]!==b.data[i]){changed++;max=Math.max(max,Math.abs(a.data[i]-b.data[i]));}
+    return {sameSize:true,changed,max};
+  },{expected,actual});
+  assert.ok(difference.sameSize && difference.changed<=32 && difference.max<=1,`Card image changed: ${JSON.stringify(difference)}`);
+}
 async function main(){
   await fs.mkdir(output,{recursive:true});
   const userData=await fs.mkdtemp(path.join(os.tmpdir(),'shiju-chrome-'));
@@ -22,6 +34,7 @@ async function main(){
   await check('MV3 service worker and real extension UI load',async()=>{
     assert.equal(await panel.locator('#templates button').count(),6);
     assert.match(await panel.locator('#accountStatus').innerText(),/未关联/);
+    assert.equal(await panel.locator('#avatar .x-mark path').count(),1);
     const behavior=await worker.evaluate(()=>chrome.sidePanel.getPanelBehavior());assert.equal(behavior.openPanelOnActionClick,true);
   });
   await panel.screenshot({path:path.join(output,'sidepanel-440.png'),fullPage:true});
@@ -50,6 +63,59 @@ async function main(){
     await panel.getByRole('button',{name:'保存资料',exact:true}).click();
     await panel.locator('#profileDialog').waitFor({state:'hidden'});
     assert.equal(await panel.locator('#accountName').innerText(),'卡片测试员');assert.equal(await panel.locator('#avatar img').count(),1);
+  });
+  await check('Header logo and repository link are present and safe to open',async()=>{
+    assert.equal(await panel.locator('.brand-logo').evaluate(img=>img.complete && img.naturalWidth>0),true);
+    assert.equal(await panel.locator('#repository').getAttribute('href'),'https://github.com/zkilxx/shiju-x-card');
+    assert.equal(await panel.locator('#repository').getAttribute('target'),'_blank');
+    assert.match(await panel.locator('#repository').getAttribute('rel'),/noopener/);assert.equal(await panel.locator('#repository svg path').count(),1);
+  });
+  await check('English interface persists independently without changing profile, draft or card pixels',async()=>{
+    await eventually(async()=>await panel.locator('#saveStatus').innerText()==='已保存');
+    const before=await panel.evaluate(async()=>({draft:(await chrome.storage.local.get('shijuDraft')).shijuDraft,image:document.querySelector('#preview').toDataURL(),theme:document.querySelector('#themeMode').value}));
+    await panel.locator('#languageMode').selectOption('en');await eventually(async()=>await panel.locator('#export span').innerText()==='Export card');
+    assert.equal(await panel.locator('html').getAttribute('lang'),'en');assert.equal(await panel.locator('.brand h1').innerText(),'拾句');
+    assert.equal(await panel.locator('#accountName').innerText(),'卡片测试员');assert.match(await panel.locator('#accountStatus').innerText(),/Manual profile/);
+    assert.equal(await panel.getByRole('button',{name:'Notebook template',exact:true}).count(),1);
+    await fs.writeFile(path.join(output,'language-before.png'),Buffer.from(before.image.split(',')[1],'base64'));const after=await panel.locator('#preview').evaluate(c=>c.toDataURL());await fs.writeFile(path.join(output,'language-after.png'),Buffer.from(after.split(',')[1],'base64'));await sameCard(panel,before.image,after);assert.equal(await panel.locator('#themeMode').inputValue(),before.theme);
+    await panel.locator('#settings').click();assert.equal(await panel.locator('#profileDialog h2').innerText(),'Account profile');assert.equal(await panel.locator('#profileName').getAttribute('placeholder'),'Your display name');await panel.locator('#closeDialog').click();
+    await eventually(()=>panel.evaluate(async()=>((await chrome.storage.local.get('shijuLanguage')).shijuLanguage)==='en'));
+    await panel.reload();await panel.getByRole('button',{name:'Notebook template',exact:true}).waitFor();
+    assert.equal(await panel.locator('#languageMode').inputValue(),'en');assert.equal(await panel.locator('#accountName').innerText(),'卡片测试员');
+    assert.deepEqual(await panel.evaluate(async()=>((await chrome.storage.local.get('shijuDraft')).shijuDraft)),before.draft);
+    await sameCard(panel,before.image);
+    await panel.locator('#sync').click();await eventually(async()=>/Open X in this window/.test(await panel.locator('#notice').innerText()));
+    for(const width of [320,440,1000]){
+      await panel.setViewportSize({width,height:1200});
+      assert.ok(await panel.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`English UI overflows at ${width}px`);
+      const thumbnails=await panel.locator('.swatch').evaluateAll(tiles=>tiles.every(tile=>{
+        const box=tile.getBoundingClientRect();return [...tile.children].every(child=>{
+          const r=child.getBoundingClientRect();if(r.left<box.left||r.right>box.right||r.top<box.top||r.bottom>box.bottom)return false;
+          if(child.classList.contains('swatch-title')){const range=document.createRange();range.selectNodeContents(child);return [...range.getClientRects()].every(line=>line.left>=box.left&&line.right<=box.right&&line.bottom<=box.bottom);}
+          return true;
+        });
+      }));assert.equal(thumbnails,true,`Template content overflows at ${width}px`);
+      const controls=await panel.locator('.toolbar select,.typography-controls input,.export-options select').evaluateAll(els=>els.every(el=>{const r=el.getBoundingClientRect();return r.width>15&&r.left>=0&&r.right<=innerWidth;}));assert.equal(controls,true);
+    }
+    await panel.setViewportSize({width:440,height:1200});await panel.screenshot({path:path.join(output,'english-440.png'),fullPage:true});
+    const pending=panel.waitForEvent('download');await panel.locator('#export').click();const download=await pending;await download.saveAs(path.join(output,'english-export.png'));await sameCard(panel,before.image,'data:image/png;base64,'+(await fs.readFile(path.join(output,'english-export.png'))).toString('base64'));
+    await panel.locator('#languageMode').selectOption('zh-CN');await eventually(async()=>await panel.locator('#export span').innerText()==='导出卡片');
+  });
+  await check('Every card includes the complete repository address and GitHub icon below the brand',async()=>{
+    const cases=await panel.evaluate(async()=>{
+      const {templates,renderCard}=await import('./render.js');
+      return templates.map(template=>{
+        const c=document.createElement('canvas'),ctx=c.getContext('2d'),calls=[],original=ctx.fillText;
+        ctx.fillText=function(text,x,y,...rest){calls.push({text,x,y,width:this.measureText(text).width});return original.call(this,text,x,y,...rest);};
+        const url='https://x.com/the_author/status/1234567890123456789';
+        renderCard(c,{title:'标题',body:'正文',fontSize:38,titleSize:80,template:template.id,ratio:'auto',tweetSource:{url,account:{name:'原作者',handle:'the_author'}}});
+        const repo=calls.find(call=>call.text==='github.com/zkilxx/shiju-x-card'),brand=calls.find(call=>call.text==='拾句'),link=calls.find(call=>call.text===url.replace('https://',''));
+        const icon=ctx.getImageData(Math.floor(repo.x-25),Math.floor(repo.y+2),18,18).data,bg=ctx.getImageData(0,0,1,1).data;let ink=0;
+        for(let i=0;i<icon.length;i+=4)if(Math.abs(icon[i]-bg[0])+Math.abs(icon[i+1]-bg[1])+Math.abs(icon[i+2]-bg[2])>12)ink++;
+        return {repo,brand,link,height:c.height,ink};
+      });
+    });
+    for(const c of cases){assert.ok(c.repo&&c.brand&&c.link);assert.ok(c.repo.y>c.brand.y+30);assert.ok(c.repo.x>88);assert.ok(c.repo.x+c.repo.width<=993);assert.ok(c.repo.y+22<c.height);assert.ok(c.ink>50);}
   });
   await check('Six templates render six different actual images',async()=>{
     const images=new Set();
@@ -234,6 +300,19 @@ async function main(){
     assert.equal(await panel.locator('#body').inputValue(),'自己的文字');
     await x.evaluate(()=>{const more=document.createElement('button');more.dataset.testid='tweet-text-show-more-link';more.textContent='显示更多';document.querySelector('#source-tweet').append(more);});
     await eventually(async()=>await x.locator('#source-tweet > .shiju-tweet-export').isEnabled());await x.locator('#source-tweet > .shiju-tweet-export').click();await eventually(async()=>/先展开/.test(await x.locator('.shiju-page-toast').innerText()));
+  });
+  await check('Existing and new tweet buttons follow language changes and show English errors',async()=>{
+    const body=await panel.locator('#body').inputValue();
+    await panel.locator('#languageMode').selectOption('en');
+    await eventually(async()=>await x.locator('#source-tweet > .shiju-tweet-export').innerText()==='Export card');
+    assert.equal(await x.locator('#source-tweet > .shiju-tweet-export').getAttribute('aria-label'),'Export this post as a text card');
+    await eventually(async()=>await x.locator('#source-tweet > .shiju-tweet-export').isEnabled());await x.locator('#source-tweet > .shiju-tweet-export').click();
+    await eventually(async()=>await x.locator('.shiju-page-toast').innerText()==='Expand the full post before exporting it.');
+    await x.evaluate(()=>{const copy=document.querySelector('#source-tweet').cloneNode(true);copy.id='english-tweet';copy.querySelector('.shiju-tweet-export').remove();document.body.append(copy);});
+    await x.locator('#english-tweet').hover();
+    await eventually(async()=>await x.locator('#english-tweet > .shiju-tweet-export').innerText()==='Export card');
+    assert.equal(await panel.locator('#body').inputValue(),body);
+    await panel.locator('#languageMode').selectOption('zh-CN');await eventually(async()=>await x.locator('#english-tweet > .shiju-tweet-export').innerText()==='导出卡片');
   });
   await check('Existing low-resolution draft upgrades to lossless HD while new explicit settings persist',async()=>{
     const saved=await panel.evaluate(async()=>{const {shijuDraft}=await chrome.storage.local.get('shijuDraft');return shijuDraft;});

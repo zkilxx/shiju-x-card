@@ -1,4 +1,6 @@
 import {templates, renderCard, loadAvatar} from './render.js';
+import {githubPath,xPath} from './branding.js';
+const {t,text:localized}=globalThis.ShijuI18n;
 const $ = id => document.getElementById(id);
 const extension = Boolean(globalThis.chrome?.runtime?.id);
 const defaults = {title:$('title').value,body:$('body').value,template:'white',ratio:'auto',titleSize:106,fontSize:38,paragraphSpacing:70,titleBodyGap:38,format:'png',resolution:2160,exportQualityVersion:2,account:null,tweetSource:null,personalDraft:null};
@@ -9,12 +11,14 @@ const storage = {
   async get() {return extension ? (await chrome.storage.local.get('shijuDraft')).shijuDraft : JSON.parse(localStorage.getItem('shijuDraft') || 'null');},
   async set(value) {if(extension) await chrome.storage.local.set({shijuDraft:value});else localStorage.setItem('shijuDraft',JSON.stringify(value));}
 };
-const notice = value => {$('notice').textContent=value;};
+const notice = (value,values={}) => localized($('notice'),value,values);
+const status = (id,value,values={}) => localized($(id),value,values);
+const exportLabel = () => localized($('export').querySelector('span'),exporting?'正在导出…':'导出卡片');
 const cardAccount=()=>state.tweetSource?.account || state.account;
 const cardAvatar=()=>state.tweetSource ? sourceAvatar : avatar;
 function showTweetSource() {
   $('tweetSource').hidden=!state.tweetSource;
-  if(state.tweetSource){$('sourceLink').textContent=`原推文 · @${state.tweetSource.account.handle}`;$('sourceLink').href=state.tweetSource.url;}
+  if(state.tweetSource){status('sourceLink','原推文 · @{handle}',{handle:state.tweetSource.account.handle});$('sourceLink').href=state.tweetSource.url;}
 }
 async function importTweet(request) {
   if(!request || request.status!=='ready' || Date.now()-request.createdAt>60000)return;
@@ -33,7 +37,7 @@ async function importTweet(request) {
   if(renderValid)await exportCard();
 }
 function enqueueTweet(request) {
-  tweetQueue=tweetQueue.catch(()=>{}).then(()=>importTweet(request)).catch(error=>notice(`推文导出失败：${error.message}`));
+  tweetQueue=tweetQueue.catch(()=>{}).then(()=>importTweet(request)).catch(error=>notice('推文导出失败：{error}',{error:t(error.message)}));
 }
 function restorePersonalDraft() {
   if(state.personalDraft){for(const id of ['title','body','ratio','fontSize','titleSize','paragraphSpacing','titleBodyGap'])state[id]=state.personalDraft[id] ?? state[id];}
@@ -44,23 +48,24 @@ function restorePersonalDraft() {
 function flushSave() {
   clearTimeout(saveTimer);saveTimer=undefined;
   const revision=saveRevision,snapshot=structuredClone(state);
-  saving=saving.catch(()=>{}).then(()=>storage.set(snapshot)).then(()=>{if(revision===saveRevision)$('saveStatus').textContent='已保存';}).catch(()=>{$('saveStatus').textContent='保存失败';notice('本机存储空间不足，当前草稿尚未保存，请先导出图片。');});
+  saving=saving.catch(()=>{}).then(()=>storage.set(snapshot)).then(()=>{if(revision===saveRevision)status('saveStatus','已保存');}).catch(()=>{status('saveStatus','保存失败');notice('本机存储空间不足，当前草稿尚未保存，请先导出图片。');});
 }
 function queueSave() {
   ++saveRevision;
-  $('saveStatus').textContent='正在保存…';clearTimeout(saveTimer);
+  status('saveStatus','正在保存…');clearTimeout(saveTimer);
   saveTimer=setTimeout(flushSave,200);
 }
 function redraw() {
   try {
     const dimensions=renderCard($('preview'),state,cardAvatar(),Number(state.resolution));
-    $('dimensions').textContent=`${dimensions.width} × ${dimensions.height}${dimensions.fontSize<state.fontSize?' · 字号已适配':''}`;
-    $('preview').setAttribute('aria-label',`${cardAccount()?.name || '示例账号'}的卡片：${state.title}。${state.body}`);
+    $('preview').removeAttribute('data-i18n-aria');
+    $('dimensions').textContent=`${dimensions.width} × ${dimensions.height}${dimensions.fontSize<state.fontSize?t(' · 字号已适配'):''}`;
+    $('preview').setAttribute('aria-label',t('{name}的卡片：{title}。{body}',{name:cardAccount()?.name || t('示例账号'),title:state.title,body:state.body}));
     renderValid=true;$('export').disabled=exporting;
     if($('notice').dataset.renderError) {notice('');delete $('notice').dataset.renderError;}
   } catch(error) {
     renderValid=false;$('export').disabled=true;notice(error.message);$('notice').dataset.renderError='1';
-    $('dimensions').textContent='文字超出尺寸 · 上次有效预览';
+    $('dimensions').textContent=t('文字超出尺寸 · 上次有效预览');
   }
   $('titleCount').textContent=`${[...state.title].length}/80`;$('bodyCount').textContent=`${[...state.body].length}/2400`;
   $('fontSizeLabel').textContent=state.fontSize;
@@ -70,29 +75,32 @@ function redraw() {
 }
 function renderTemplates() {
   for(const template of templates) {
-    const button=document.createElement('button');button.className='template';button.type='button';button.dataset.template=template.id;button.setAttribute('aria-label',`${template.name}模板`);
+    const button=document.createElement('button');button.className='template';button.type='button';button.dataset.template=template.id;button.setAttribute('aria-label',t('{name}模板',{name:t(template.name)}));
     const swatch=document.createElement('span');swatch.className='swatch';swatch.style.background=template.bg;swatch.style.color=template.fg;
-    const sample=document.createElement('span');sample.className='swatch-title';sample.append('把想法，',document.createElement('br'),'留在这一刻。');
+    const sample=document.createElement('span');sample.className='swatch-title';sample.append(t('把想法，'),document.createElement('br'),t('留在这一刻。'));
     const rule=document.createElement('span');rule.className='swatch-line';const url=document.createElement('span');url.className='swatch-url';url.textContent='x.com/yourname';swatch.append(sample,rule,url);
-    const label=document.createElement('span');label.className='template-label';label.textContent=template.name;button.append(swatch,label);$('templates').append(button);
+    const label=document.createElement('span');label.className='template-label';label.textContent=t(template.name);button.append(swatch,label);$('templates').append(button);
     button.addEventListener('click',()=>{state.template=template.id;selectTemplate();redraw();queueSave();});
   }
 }
 function selectTemplate() {
+  $('templateName').removeAttribute('data-i18n');
   document.querySelectorAll('[data-template]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.template===state.template)));
-  $('templateName').textContent=templates.find(t=>t.id===state.template)?.name || '素白';
+  $('templateName').textContent=t(templates.find(item=>item.id===state.template)?.name || '素白');
 }
 function showAccount(status) {
   const account=state.account;
-  $('accountName').textContent=account?.name || '示例账号';$('accountHandle').textContent=`@${account?.handle || 'yourname'}`;
+  $('accountName').removeAttribute('data-i18n');
+  $('accountName').textContent=account?.name || t('示例账号');$('accountHandle').textContent=`@${account?.handle || 'yourname'}`;
   if(account) $('accountHandle').href=`https://x.com/${account.handle}`;else $('accountHandle').removeAttribute('href');
-  $('accountStatus').textContent=status || (account ? account.source==='x'?'上次同步资料 · 待确认当前账号':'手动资料 · 可同步 X 账号':'未关联 · 打开 X 后同步');
+  localized($('accountStatus'),status || (account ? account.source==='x'?'上次同步资料 · 待确认当前账号':'手动资料 · 可同步 X 账号':'未关联 · 打开 X 后同步'));
   $('avatar').replaceChildren();
-  if(account?.avatarData) {const img=document.createElement('img');img.src=account.avatarData;img.alt='';$('avatar').append(img);} else $('avatar').textContent=account?.name?.slice(0,1) || '人';
+  if(account?.avatarData) {const img=document.createElement('img');img.src=account.avatarData;img.alt='';$('avatar').append(img);} else if(account)$('avatar').textContent=account.name.slice(0,1);
+  else {const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'),path=document.createElementNS(svg.namespaceURI,'path');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('class','x-mark');svg.setAttribute('aria-hidden','true');path.setAttribute('d',xPath);svg.append(path);$('avatar').append(svg);}
 }
 async function syncAccount(quiet=false) {
   if(!extension) {if(!quiet)notice('网页预览无法读取 X。安装插件后可同步，或点击右上角填写账号资料。');return;}
-  const generation=++syncGeneration;$('sync').disabled=true;$('accountStatus').textContent='正在读取当前 X 账号…';
+  const generation=++syncGeneration;$('sync').disabled=true;status('accountStatus','正在读取当前 X 账号…');
   try {
     const result=await chrome.runtime.sendMessage({type:'SYNC_ACCOUNT'});
     if(generation!==syncGeneration)return;
@@ -122,27 +130,29 @@ async function uploadAvatar(file) {
   return canvas.toDataURL('image/png');
 }
 function openProfile() {
-  $('profileName').value=state.account?.name || '';$('profileHandle').value=state.account?.handle || '';$('avatarFile').value='';$('profileError').textContent='';$('profileDialog').showModal();
+  $('profileName').value=state.account?.name || '';$('profileHandle').value=state.account?.handle || '';$('avatarFile').value='';status('profileError','');$('profileDialog').showModal();
 }
 async function exportCard() {
   if(exporting)return;
   if(!state.title.trim() && !state.body.trim()) {notice('先写一点文字，再导出卡片。');$('body').focus();return;}
   if(!cardAccount()) {notice('先同步当前 X 账号，或填写账号资料后导出。');openProfile();return;}
   if(!renderValid)return;
-  exporting=true;$('export').disabled=true;$('export').querySelector('span').textContent='正在导出…';
+  exporting=true;$('export').disabled=true;exportLabel();
   try {
     const snapshot=structuredClone(state),author=cardAccount();
     const canvas=document.createElement('canvas');renderCard(canvas,snapshot,cardAvatar(),Number(state.resolution));
     const mime=state.format==='jpeg'?'image/jpeg':'image/png';
     const blob=await new Promise(resolve=>canvas.toBlob(resolve,mime,1));if(!blob)throw new Error('图片生成失败，请重试。');
     const url=URL.createObjectURL(blob), link=document.createElement('a');
-    link.href=url;link.download=`拾句-${author.handle}-${new Date().toISOString().replace(/[:.]/g,'-')}.${snapshot.format==='jpeg'?'jpg':'png'}`;
+    link.href=url;link.download=`${ShijuI18n.language==='en'?'Shiju':'拾句'}-${author.handle}-${new Date().toISOString().replace(/[:.]/g,'-')}.${snapshot.format==='jpeg'?'jpg':'png'}`;
     document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
-    notice(`${state.format==='jpeg'?'JPG':'PNG'} 图片已生成，正在下载。`);
-  } catch(error) {notice(`导出失败：${error.message}`);}
-  finally {exporting=false;$('export').disabled=!renderValid;$('export').querySelector('span').textContent='导出卡片';}
+    notice('{format} 图片已生成，正在下载。',{format:state.format==='jpeg'?'JPG':'PNG'});
+  } catch(error) {notice('导出失败：{error}',{error:t(error.message)});}
+  finally {exporting=false;$('export').disabled=!renderValid;exportLabel();}
 }
 async function init() {
+  await ShijuI18n.ready;
+  const repoPath=document.createElementNS('http://www.w3.org/2000/svg','path');repoPath.setAttribute('d',githubPath);$('repository').querySelector('svg').append(repoPath);
   try {
     const saved=await storage.get();if(saved)state={...defaults,...saved,titleSize:saved.titleSize ?? Math.round((Number(saved.fontSize)||38)*2.8),paragraphSpacing:saved.paragraphSpacing ?? Math.round((Number(saved.fontSize)||38)*1.85)};
     state.title=String(state.title||'').slice(0,80);state.body=String(state.body||'').slice(0,2400);
@@ -160,6 +170,11 @@ async function init() {
     if(state.tweetSource && (!XCardAccount.validHandle(state.tweetSource.account?.handle) || !XCardAccount.tweetURL(state.tweetSource.url)))state.tweetSource=null;
   } catch {notice('无法读取上次草稿，已打开新的编辑页。');}
   renderTemplates();selectTemplate();
+  document.addEventListener('shiju-language-change',()=>{
+    $('templates').replaceChildren();renderTemplates();selectTemplate();showTweetSource();
+    if(!state.account)$('accountName').textContent=t('示例账号');
+    exportLabel();redraw();
+  });
   for(const id of ['title','body','ratio','titleSize','fontSize','paragraphSpacing','titleBodyGap','format','resolution']) {
     $(id).value=state[id];$(id).addEventListener(['title','body','titleSize','fontSize','paragraphSpacing','titleBodyGap'].includes(id)?'input':'change',()=>{
       state[id]=['titleSize','fontSize','paragraphSpacing','titleBodyGap','resolution'].includes(id)?Number($(id).value):$(id).value;
@@ -171,14 +186,14 @@ async function init() {
   $('sync').addEventListener('click',()=>syncAccount());$('settings').addEventListener('click',openProfile);$('closeDialog').addEventListener('click',()=>$('profileDialog').close());$('export').addEventListener('click',exportCard);
   $('profileForm').addEventListener('submit',async event=>{
     event.preventDefault();const name=$('profileName').value.trim(),handle=$('profileHandle').value.trim().replace(/^@/,'');
-    if(!name || !XCardAccount.validHandle(handle)) {$('profileError').textContent='请填写昵称和有效的 X ID（1–15 位字母、数字或下划线）。';return;}
+    if(!name || !XCardAccount.validHandle(handle)) {status('profileError','请填写昵称和有效的 X ID（1–15 位字母、数字或下划线）。');return;}
     const submit=$('profileForm').querySelector('[type=submit]');submit.disabled=true;
     try {
       const uploaded=await uploadAvatar($('avatarFile').files[0]);
       ++syncGeneration;$('sync').disabled=false;
       const avatarData=uploaded ?? (state.account?.handle.toLowerCase()===handle.toLowerCase()?state.account.avatarData:'');
       state.account={name,handle,url:`https://x.com/${handle}`,avatarData,source:'manual'};avatar=await loadAvatar(avatarData);showAccount();redraw();queueSave();$('profileDialog').close();notice('账号资料已保存。');
-    } catch(error) {$('profileError').textContent=error.message;}finally{submit.disabled=false;}
+    } catch(error) {status('profileError',error.message);}finally{submit.disabled=false;}
   });
   if(extension) {
     chrome.runtime.onMessage.addListener(message=>{if(message.type==='ACCOUNT_INVALIDATED')syncAccount(true);});
@@ -189,4 +204,4 @@ async function init() {
   document.addEventListener('visibilitychange',()=>{if(document.hidden && saveTimer)flushSave();});
   window.addEventListener('pagehide',()=>{if(saveTimer)flushSave();});
 }
-init().catch(error=>notice(`打开失败：${error.message}`));
+init().catch(error=>notice('打开失败：{error}',{error:t(error.message)}));

@@ -29,7 +29,7 @@ async function sync() {
   let response;
   try { response = await chrome.tabs.sendMessage(tab.id, {type: 'READ_ACCOUNT'}); }
   catch {
-    await chrome.scripting.executeScript({target: {tabId: tab.id}, files: ['account.js', 'content.js']});
+    await chrome.scripting.executeScript({target: {tabId: tab.id}, files: ['i18n.js', 'account.js', 'content.js']});
     await chrome.scripting.insertCSS({target: {tabId: tab.id}, files: ['content.css']});
     response = await chrome.tabs.sendMessage(tab.id, {type: 'READ_ACCOUNT'});
   }

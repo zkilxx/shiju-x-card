@@ -1,3 +1,4 @@
+import {githubPath,repositoryLabel,xPath} from './branding.js';
 export const templates = [
   {id:'white', name:'素白', bg:'#ffffff', fg:'#242c27', muted:'#85918a', line:'#dce2dd', accent:'#173e34', serif:true},
   {id:'ink', name:'墨夜', bg:'#262827', fg:'#f5f4ef', muted:'#abb0aa', line:'#4b514c', accent:'#d6dacb', serif:true},
@@ -55,6 +56,16 @@ function drawBrandmark(ctx, right, y, color) {
   ctx.beginPath();ctx.roundRect(30,62,27,31,5);ctx.roundRect(72,62,27,31,5);ctx.fill();
   ctx.restore();
   return width;
+}
+function drawRepository(ctx,right,y,color) {
+  ctx.save();
+  ctx.font=`400 18px ${sans}`;ctx.fillStyle=color;
+  const iconSize=18,gap=7,textWidth=ctx.measureText(repositoryLabel).width;
+  const left=right-textWidth-gap-iconSize;
+  ctx.fillText(repositoryLabel,left+iconSize+gap,y);
+  ctx.translate(left,y+2);ctx.scale(iconSize/16,iconSize/16);
+  ctx.fill(new Path2D(githubPath));
+  ctx.restore();
 }
 export async function loadAvatar(data) {
   if (!/^data:image\/(png|jpeg|webp|gif);base64,/.test(data || '')) return null;
@@ -115,7 +126,8 @@ export function renderCard(canvas, state, avatar = null, outputWidth = 1080) {
     ctx.drawImage(avatar,(avatar.naturalWidth-edge)/2,(avatar.naturalHeight-edge)/2,edge,edge,padding,93,86,86);
   } else {
     ctx.fillStyle=template.line;ctx.fillRect(padding,93,86,86);ctx.fillStyle=template.muted;
-    ctx.beginPath();ctx.arc(padding+43,125,16,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(padding+43,171,31,28,0,0,Math.PI*2);ctx.fill();
+    if(!state.account && !state.tweetSource?.account){ctx.save();ctx.translate(padding+23,116);ctx.scale(40/24,40/24);ctx.fill(new Path2D(xPath));ctx.restore();}
+    else {ctx.beginPath();ctx.arc(padding+43,125,16,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(padding+43,171,31,28,0,0,Math.PI*2);ctx.fill();}
   }
   ctx.restore();
   ctx.font=`600 30px ${sans}`;ctx.fillStyle=template.fg;ctx.fillText(ellipsis(ctx,account.name,inner-116),padding+112,100);
@@ -147,5 +159,6 @@ export function renderCard(canvas, state, avatar = null, outputWidth = 1080) {
   while(ctx.measureText(footerURL).width>linkWidth && linkSize>19){linkSize--;ctx.font=`400 ${linkSize}px ${sans}`;}
   // Keep the complete original URL while reserving clear space for the brandmark.
   ctx.fillText(footerURL,padding,footerY+38,linkWidth);
+  drawRepository(ctx,1080-padding,footerY+82,template.muted);
   return {width:canvas.width,height:canvas.height,fontSize,titleSize,template:template.name};
 }
