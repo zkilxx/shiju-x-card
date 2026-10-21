@@ -97,16 +97,12 @@ button {
   margin-bottom:20px
 }
 .brand h1 {
-  font-family:"Songti SC","STSong",serif;
-  font-size:32px;
-  font-weight:500;
-  letter-spacing:4px;
-  margin:0 0 2px
-}
-.brand span {
-  font-size:10px;
-  letter-spacing:4px;
-  color:var(--brand-muted)
+  font-family:"PingFang SC","Microsoft YaHei",sans-serif;
+  font-size:22px;
+  font-weight:600;
+  line-height:30px;
+  letter-spacing:1.5px;
+  margin:0
 }
 .icon-button {
   width:32px;
@@ -522,11 +518,9 @@ dialog .notice {
 
 }
 
-.brand-identity {display:flex;align-items:center;gap:9px;min-width:0;}
-.brand {margin-bottom:14px;}
-.brand h1 {font-size:28px;line-height:1.2;letter-spacing:3px;}
-.brand-identity > div > span {font-size:9px;letter-spacing:3px;}
-.brand-logo {display:block;flex-shrink:0;border-radius:10px;width:36px;height:36px;}
+.brand-identity {display:flex;align-items:center;gap:10px;min-width:0;}
+.brand {min-height:32px;margin-bottom:18px;}
+.brand-logo {display:block;flex-shrink:0;border-radius:8px;width:30px;height:30px;}
 .repo-button {color:var(--text);text-decoration:none;}
 .repo-button svg {fill:currentColor;stroke:none;width:17px;height:17px;}
 .toolbar {display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 18px;}

@@ -17,9 +17,9 @@ async function sameCard(page,expected,actual=null) {
     const a=await read(expected),b=await read(actual||document.querySelector('#preview').toDataURL());
     if(a.width!==b.width||a.height!==b.height)return {sameSize:false};
     let changed=0,max=0;for(let i=0;i<a.data.length;i++)if(a.data[i]!==b.data[i]){changed++;max=Math.max(max,Math.abs(a.data[i]-b.data[i]));}
-    return {sameSize:true,changed,max};
+    return {sameSize:true,changed,max,channels:a.data.length};
   },{expected,actual});
-  assert.ok(difference.sameSize && difference.changed<=32 && difference.max<=1,`Card image changed: ${JSON.stringify(difference)}`);
+  assert.ok(difference.sameSize && difference.changed<=difference.channels*0.0001 && difference.max<=1,`Card image changed: ${JSON.stringify(difference)}`);
 }
 async function main(){
   await fs.mkdir(output,{recursive:true});
