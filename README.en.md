@@ -5,7 +5,7 @@
   <h1>Shiju · X Text Cards</h1>
   <p>Turn your thoughts and favorite X posts into beautiful cards, right in Chrome's side panel.</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.5.1-173e34" alt="Version 1.5.1">
+    <img src="https://img.shields.io/badge/version-1.5.2-173e34" alt="Version 1.5.2">
     <img src="https://img.shields.io/badge/Chrome-116%2B-4285F4?logo=googlechrome&logoColor=white" alt="Chrome 116+">
     <img src="https://img.shields.io/badge/Manifest-V3-6d7772" alt="Manifest V3">
     <img src="https://img.shields.io/badge/PNG-3240px-173e34" alt="PNG exports up to 3240px">
@@ -45,7 +45,7 @@ Select **English** in the language menu at the top. Language changes affect cont
 
 Requires desktop Chrome 116 or later. The extension is currently installed as an unpacked extension; it is not listed in the Chrome Web Store.
 
-1. Download `shiju-x-card-1.5.1.zip` from [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest) and extract it.
+1. Download `shiju-x-card-1.5.2.zip` from [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest) and extract it.
 2. Open `chrome://extensions` and enable **Developer mode** in the top-right corner.
 3. Click **Load unpacked** and select the extracted **extension** folder, which contains `manifest.json`.
 4. Pin Shiju from Chrome's extensions menu, then click its icon to open the side panel.
@@ -67,7 +67,7 @@ git clone https://github.com/zkilxx/shiju-x-card.git
 cd shiju-x-card
 ```
 
-To update, replace the files in the installed folder, click **Reload** for Shiju in `chrome://extensions`, then close and reopen the side panel. Refresh X if its hover buttons have not updated.
+To update, replace the files in the installed folder, click **Reload** for Shiju in `chrome://extensions`, then close and reopen the side panel. The extension tries to reconnect open X pages and replace stale buttons. If a connection error remains, refresh X once and retry.
 
 ## Usage
 
@@ -132,7 +132,7 @@ npx playwright install chromium
 npm test
 ```
 
-The regression suite loads the real extension in an isolated temporary Chrome profile. X pages use mocked responses. Coverage includes profile synchronization, post buttons and downloads, draft restoration, templates, typography, paragraph spacing, notebook rules, export/publication timestamps, UTC offsets, languages, appearance and identical PNG preview/export pixels. Mocked tests do not guarantee live compatibility after every X page update.
+The regression suite loads the real extension in an isolated temporary Chrome profile. X pages use mocked responses. All **37 regression checks pass**. Coverage includes profile synchronization, post buttons and downloads, draft restoration, templates, typography, paragraph spacing, notebook rules, export/publication timestamps, UTC offsets, languages, appearance and identical PNG preview/export pixels. Additional checks cover a real disable/enable cycle with the X document preserved, reconnects without duplicate downloads, and localized invalid-context guidance. Post-export tests stub the native side-panel opening call. Mocked tests do not guarantee live compatibility after every X page update.
 
 Regenerate documentation screenshots with demo profiles:
 
@@ -163,6 +163,7 @@ extension/                  Loadable Chrome extension
 docs/images/                Actual UI screenshots for the README
 scripts/capture-docs.cjs     Screenshot generator
 tests/verify.cjs             Regression suite
+tests/reload.cjs             Existing-page reconnect and extension lifecycle checks
 design/                     Initial concept and visual specifications
 ```
 

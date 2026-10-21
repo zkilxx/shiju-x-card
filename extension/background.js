@@ -24,15 +24,33 @@ async function activeXTab() {
   if (!tab?.id || !/^https:\/\/(x\.com|twitter\.com)\//.test(tab.url || '')) throw new Error('请先在当前窗口打开并登录 X，再点同步。');
   return tab;
 }
+const reconnectingTabs=new Map();
+async function installContent(tabId) {
+  await chrome.scripting.executeScript({target:{tabId},files:['i18n.js','account.js','content.js']});
+  await chrome.scripting.insertCSS({target:{tabId},files:['content.css']});
+}
+function ensureContent(tabId) {
+  if(reconnectingTabs.has(tabId))return reconnectingTabs.get(tabId);
+  const task=(async()=>{
+    try{const pong=await chrome.tabs.sendMessage(tabId,{type:'SHIJU_PING'});if(pong?.version===chrome.runtime.getManifest().version)return;}catch{}
+    await installContent(tabId);
+  })().finally(()=>reconnectingTabs.delete(tabId));
+  reconnectingTabs.set(tabId,task);return task;
+}
+async function reconnectOpenXTabs() {
+  const tabs=await chrome.tabs.query({url:['https://x.com/*','https://twitter.com/*']});
+  await Promise.allSettled(tabs.filter(tab=>tab.id!=null).map(tab=>ensureContent(tab.id)));
+}
+// Reloading an unpacked extension fires onInstalled with reason "update".
+// Rebind its existing buttons without navigating or refreshing the user's pages.
+chrome.runtime.onInstalled.addListener(()=>{reconnectOpenXTabs().catch(console.warn);});
+chrome.runtime.onStartup.addListener(()=>{reconnectOpenXTabs().catch(console.warn);});
+reconnectOpenXTabs().catch(console.warn);
+
 async function sync() {
   const tab = await activeXTab();
-  let response;
-  try { response = await chrome.tabs.sendMessage(tab.id, {type: 'READ_ACCOUNT'}); }
-  catch {
-    await chrome.scripting.executeScript({target: {tabId: tab.id}, files: ['i18n.js', 'account.js', 'content.js']});
-    await chrome.scripting.insertCSS({target: {tabId: tab.id}, files: ['content.css']});
-    response = await chrome.tabs.sendMessage(tab.id, {type: 'READ_ACCOUNT'});
-  }
+  await ensureContent(tab.id);
+  const response=await chrome.tabs.sendMessage(tab.id,{type:'READ_ACCOUNT'});
   const account = response?.account;
   if (!account || !XCardAccount.validHandle(account.handle)) throw new Error('还没有读到登录账号，请等 X 页面加载完成后重试。');
   account.avatarData = await imageData(account.avatar);

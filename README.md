@@ -5,7 +5,7 @@
   <h1>拾句 · X 文字卡片</h1>
   <p>在 Chrome 侧边栏，把想法和喜欢的推文做成一张好看的卡片。</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.5.1-173e34" alt="Version 1.5.1">
+    <img src="https://img.shields.io/badge/version-1.5.2-173e34" alt="Version 1.5.2">
     <img src="https://img.shields.io/badge/Chrome-116%2B-4285F4?logo=googlechrome&logoColor=white" alt="Chrome 116+">
     <img src="https://img.shields.io/badge/Manifest-V3-6d7772" alt="Manifest V3">
     <img src="https://img.shields.io/badge/PNG-3240px-173e34" alt="PNG export up to 3240px">
@@ -50,7 +50,7 @@
 
 目前通过 Chrome 的「加载已解压的扩展程序」安装，尚未上架 Chrome 应用商店。
 
-1. 前往 [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest)，下载 `shiju-x-card-1.5.1.zip` 并解压。
+1. 前往 [Releases](https://github.com/zkilxx/shiju-x-card/releases/latest)，下载 `shiju-x-card-1.5.2.zip` 并解压。
 2. 在 Chrome 地址栏输入 `chrome://extensions`，打开右上角的「开发者模式」。
 3. 点击「加载已解压的扩展程序」，选择解压后的 **extension** 文件夹，里面应有 `manifest.json`。
 4. 在 Chrome 工具栏的扩展菜单中固定「拾句」，点击图标打开侧边栏。
@@ -71,7 +71,7 @@ git clone https://github.com/zkilxx/shiju-x-card.git
 cd shiju-x-card
 ```
 
-更新时，用新版文件替换原扩展目录，在 `chrome://extensions` 点击拾句的「重新加载」，关闭再打开侧边栏。若 X 上的按钮未更新，再刷新 X 页面。
+更新时，用新版文件替换原扩展目录，在 `chrome://extensions` 点击拾句的「重新加载」，关闭再打开侧边栏。插件会尝试重新连接已打开的 X 页面并替换旧按钮；如果仍提示连接失效，刷新一次 X 页面后重试。
 
 ## 使用
 
@@ -138,7 +138,7 @@ npx playwright install chromium
 npm test
 ```
 
-测试使用独立临时 Chrome 配置加载真实扩展，X 页面通过本地模拟响应验证。当前 **33 项回归测试通过**，覆盖账号同步与切换、推文按钮与下载、草稿恢复、六套模板、独立字号、单次回车段间距、手札横线、时间来源与时区、界面主题、PNG 预览/导出一致性和超长内容处理。模拟测试不代表每次 X 网页更新后的线上行为均已实测。
+测试使用独立临时 Chrome 配置加载真实扩展，X 页面通过本地模拟响应验证。当前 **37 项回归测试通过**，覆盖账号同步与切换、推文按钮与下载、草稿恢复、六套模板、独立字号、单次回车段间距、手札横线、时间来源与时区、界面主题、PNG 预览/导出一致性和超长内容处理。另包含真实扩展停用/启用后的旧页面重连、重复注入不重复下载、失效连接提示测试；推文导出测试模拟了原生侧边栏打开调用。模拟测试不代表每次 X 网页更新后的线上行为均已实测。
 
 生成 README 截图：
 
@@ -169,6 +169,7 @@ extension/                 Chrome 扩展源码，可直接加载
 docs/images/               README 真实界面截图
 scripts/capture-docs.cjs    文档截图生成脚本
 tests/verify.cjs            扩展回归测试
+tests/reload.cjs            旧页面重连与扩展生命周期测试
 design/                    初始设计概念与视觉规格
 ```
 
