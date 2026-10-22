@@ -209,7 +209,7 @@ async function main(){
         return {...sizes,runs,bodyTop:239+sizes.titleSize*1.28+38};
       });
     });
-    for(const item of cases){assert.equal(item.runs.length,3);assert.ok(item.runs[0]>item.bodyTop+item.fontSize);assert.ok(Math.abs((item.runs[1]-item.runs[0])-item.fontSize*1.85)<2);assert.ok(Math.abs((item.runs[2]-item.runs[1])-item.fontSize*1.85*2)<2);}
+    for(const item of cases){assert.equal(item.runs.length,3);assert.ok(item.runs[0]>item.bodyTop+item.fontSize);assert.ok(Math.abs((item.runs[1]-item.runs[0])-item.fontSize*1.85)<2);assert.ok(Math.abs((item.runs[2]-item.runs[1])-item.fontSize*1.85)<2);}
   });
   await check('Title-to-body spacing moves body/rules together and persists independently',async()=>{
     const rows=await panel.evaluate(async()=>{
@@ -220,7 +220,7 @@ async function main(){
     await panel.locator('#titleBodyGap').fill('120');await eventually(async()=>await panel.locator('#titleBodyGapLabel').innerText()==='120px');assert.equal(await panel.locator('#paragraphSpacing').inputValue(),'70');
     await eventually(async()=>await panel.locator('#saveStatus').innerText()==='已保存');await panel.reload();await panel.locator('#templates button').first().waitFor();assert.equal(await panel.locator('#titleBodyGap').inputValue(),'120');await panel.locator('#titleBodyGap').fill('38');
   });
-  await check('Paragraph spacing affects single Enter boundaries, preserves soft wraps and blank lines, and persists',async()=>{
+  await check('Paragraph spacing preserves soft wraps, ignores empty source lines, and persists',async()=>{
     const positions=await panel.evaluate(async()=>{
       const {renderCard}=await import('./render.js');
       return [0,120].map(paragraphSpacing=>{
@@ -235,15 +235,25 @@ async function main(){
     assert.equal(rows[0].length,3);assert.equal(rows[1].length,3);assert.deepEqual(rows[0].slice(0,2),rows[1].slice(0,2));assert.ok(Math.abs(rows[1][2]-rows[0][2]-120)<2);
     const blankLines=await panel.evaluate(async()=>{
       const {renderCard}=await import('./render.js');
-      return ['\n','\r\n','\n\n','\n \n'].map(separator=>{
+      return ['\n','\r\n','\n\n','\n \n','\r\n\t\r\n\u3000\r\n'].map(separator=>{
         const c=document.createElement('canvas');renderCard(c,{title:'',body:`第一段${separator}第二段`,titleSize:80,fontSize:38,paragraphSpacing:120,ratio:'auto',template:'paper'});
         const data=c.getContext('2d').getImageData(980,220,1,c.height-360).data,runs=[];
         for(let i=0;i<data.length;i+=4)if(Math.abs(data[i]-241)>2 && (i===0 || Math.abs(data[i-4]-241)<=2))runs.push(220+i/4);
         return runs;
       });
     });
-    assert.deepEqual(blankLines[0],blankLines[1]);assert.deepEqual(blankLines[2],blankLines[3]);
-    assert.equal(blankLines[0].length,2);assert.equal(blankLines[2].length,2);assert.ok(Math.abs(blankLines[2][1]-blankLines[0][1]-38*1.85)<2);
+    for(const rows of blankLines)assert.deepEqual(rows,blankLines[0]);
+    assert.equal(blankLines[0].length,2);
+    const identical=await panel.evaluate(async()=>{
+      const {renderCard,templates}=await import('./render.js');
+      return templates.every(({id:template})=>['auto','square','portrait'].every(ratio=>[null,{url:'https://x.com/author/status/1234567890123456789',publishedAt:'2026-10-21T03:04:00Z',account:{name:'Author',handle:'author'}}].every(tweetSource=>{
+        const state={title:'标题',fontSize:38,titleSize:80,paragraphSpacing:55,ratio,template,tweetSource};
+        const clean=document.createElement('canvas'),spaced=document.createElement('canvas');
+        renderCard(clean,{...state,body:'第一段\n第二段'});
+        renderCard(spaced,{...state,body:'\n \n第一段\r\n\r\n\t\r\n\u3000\r\n第二段\n\n'});
+        return clean.toDataURL()===spaced.toDataURL();
+      })));
+    });assert.equal(identical,true,'Empty source lines must not affect card pixels or sizing');
     const previousBody=await panel.locator('#body').inputValue();await panel.locator('#body').fill('第一段\n第二段');await panel.locator('#paragraphSpacing').fill('0');
     await eventually(async()=>await panel.locator('#paragraphSpacingLabel').innerText()==='0px');const before=await panel.locator('#preview').evaluate(c=>c.toDataURL());
     await panel.locator('#paragraphSpacing').fill('120');await eventually(async()=>await panel.locator('#paragraphSpacingLabel').innerText()==='120px');

@@ -28,6 +28,7 @@ No API key and no build step. Sync the X account signed in to your browser, writ
 | X profile sync | Sync your signed-in account's avatar, display name, handle and profile address, or enter them manually |
 | Post-to-card export | Hover over a post and click Export card; preserve its original author and post address |
 | Independent typography | Adjust title size, body size, paragraph spacing and the title–body gap independently |
+| Clean blank lines | Preview and export ignore empty body lines while preserving ordinary line breaks; paragraph spacing controls the gap and the editor keeps the original text |
 | High-resolution images | Lossless PNG or highest-quality JPG at widths of 1080, 2160 or 3240px; default is 2160px PNG |
 | Flexible sizes | Auto height, square 1:1 or portrait 4:5 |
 | Light and dark UI | Follow the system or choose manually; UI appearance does not change card colors |

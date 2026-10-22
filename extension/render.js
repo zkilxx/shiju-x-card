@@ -115,10 +115,10 @@ export function renderCard(canvas, state, avatar = null, outputWidth = 1080) {
     const requestedGap=Number(state.paragraphSpacing);
     const paragraphGap=(Number.isFinite(requestedGap) && state.paragraphSpacing!=null ? Math.max(0,Math.min(160,requestedGap)) : 70)*fontSize/requestedBodySize;
     bodyRows=[];bodyHeight=0;
-    // Keep explicit paragraphs separate from automatic line wrapping. Blank lines
-    // retain their own height; add the paragraph gap once between text paragraphs.
+    // Ignore empty source lines. Explicit paragraphs still use the chosen gap;
+    // automatically wrapped lines keep the normal line height.
     for(const paragraph of body ? body.replace(/\r\n?/g,'\n').split('\n') : []) {
-      if(!paragraph.trim()){bodyHeight+=bodyLeading;continue;}
+      if(!paragraph.trim())continue;
       if(bodyRows.length)bodyHeight+=paragraphGap;
       for(const value of wrapText(ctx,paragraph,inner)) {
         bodyRows.push({text:value,offset:bodyHeight});bodyHeight+=bodyLeading;
